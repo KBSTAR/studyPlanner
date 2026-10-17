@@ -640,21 +640,16 @@
   </div>
 
   <script>
-    /* ==========================================================================
-       1. 여기에 본인의 Firebase 설정 정보를 붙여넣으세요
-       ========================================================================== */
-const firebaseConfig = {
-  apiKey: "AIzaSyBzB_TlwmNhgaNZiMZjaTpLLHHsA0x7nUg",
-  authDomain: "hobrosstudyplanner.firebaseapp.com",
-  projectId: "hobrosstudyplanner",
-  storageBucket: "hobrosstudyplanner.firebasestorage.app",
-  messagingSenderId: "747595635594",
-  appId: "1:747595635594:web:9f05a2fac5985c6bd94673",
-  measurementId: "G-7J2WEG807K"
-};
+    const firebaseConfig = {
+      apiKey: "AIzaSyBzB_TlwmNhgaNZiMZjaTpLLHHsA0x7nUg",
+      authDomain: "hobrosstudyplanner.firebaseapp.com",
+      projectId: "hobrosstudyplanner",
+      storageBucket: "hobrosstudyplanner.firebasestorage.app",
+      messagingSenderId: "747595635594",
+      appId: "1:747595635594:web:9f05a2fac5985c6bd94673",
+      measurementId: "G-7J2WEG807K"
+    };
 
-
-    // Firebase 초기화
     let db = null;
     let isCloudActive = false;
 
@@ -672,9 +667,6 @@ const firebaseConfig = {
       document.getElementById('cloudStatus').textContent = "⚠️ 로컬 모드";
     }
 
-    /* ==========================================================================
-       2. 기본 데이터 및 앱 로직
-       ========================================================================== */
     const DAY_NAMES = ["월요일", "화요일", "수요일", "목요일", "금요일", "토요일", "일요일"];
     const DAY_SHORT = ["월", "화", "수", "목", "금", "토", "일"];
     const DAY_EMOJIS_HOCHAN = ["🚀", "💡", "🌈", "⚡", "🍭", "🏖️", "🎈"];
@@ -683,49 +675,49 @@ const firebaseConfig = {
 
     function createInitialMissions() {
       return {
-        0: [ // 월[cite: 1]
+        0: [ // 월
           { text: "수학: 원리셈", checked: false },
           { text: "독서논술", checked: false },
           { text: "책읽기", checked: false },
           { text: "영어숙제", checked: false },
           { text: "영어숙제", checked: false }
         ],
-        1: [ // 화[cite: 1]
+        1: [ // 화
           { text: "소마셈", checked: false },
           { text: "독서논술", checked: false },
           { text: "책읽기", checked: false },
           { text: "단어시험", checked: false },
           { text: "단어시험", checked: false }
         ],
-        2: [ // 수[cite: 1]
+        2: [ // 수
           { text: "원리셈", checked: false },
           { text: "독서논술", checked: false },
           { text: "책읽기", checked: false },
           { text: "영어숙제", checked: false },
           { text: "영어숙제", checked: false }
         ],
-        3: [ // 목[cite: 1]
+        3: [ // 목
           { text: "소마셈", checked: false },
           { text: "독서논술", checked: false },
           { text: "책읽기", checked: false },
           { text: "단어시험", checked: false },
           { text: "단어시험", checked: false }
         ],
-        4: [ // 금[cite: 1]
+        4: [ // 금
           { text: "원리셈", checked: false },
           { text: "독서논술", checked: false },
           { text: "책읽기", checked: false },
           { text: "영어숙제", checked: false },
           { text: "영어숙제", checked: false }
         ],
-        5: [ // 토[cite: 1]
+        5: [ // 토
           { text: "팩토: 원, 자", checked: false },
           { text: "", checked: false },
           { text: "", checked: false },
           { text: "", checked: false },
           { text: "", checked: false }
         ],
-        6: [ // 일[cite: 1]
+        6: [ // 일
           { text: "영어단어시", checked: false },
           { text: "", checked: false },
           { text: "", checked: false },
@@ -802,7 +794,6 @@ const firebaseConfig = {
       });
     }
 
-    // 데이터 가져오기 (캐시 ➔ 로컬스토리지 ➔ 기본값)
     function getStoredData(user) {
       if (PROFILES[user].cachedData) {
         return PROFILES[user].cachedData;
@@ -818,13 +809,11 @@ const firebaseConfig = {
       return initial;
     }
 
-    // 데이터 저장 (로컬 저장 + 클라우드 Firestore 동시 저장)
-    function saveStoredData(user, data) {
+    function saveStoredData(user, data, syncCloud = true) {
       PROFILES[user].cachedData = data;
       localStorage.setItem(PROFILES[user].storageKey, JSON.stringify(data));
 
-      if (isCloudActive && db) {
-        // 클라우드 Firestore의 'habits' 컬렉션에 자동 동기화
+      if (syncCloud && isCloudActive && db) {
         db.collection("habits").doc(user).set({
           missions: JSON.stringify(data),
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -834,7 +823,7 @@ const firebaseConfig = {
       }
     }
 
-    // 클라우드 실시간 변경 감지 리스너 (다른 기기에서 변경 시 내 화면도 1초 만에 자동 갱신)
+    // 클라우드 동기화 리스너
     function listenToCloudUpdates(user) {
       if (!isCloudActive || !db) return;
 
@@ -844,12 +833,19 @@ const firebaseConfig = {
             const cloudMissions = JSON.parse(doc.data().missions);
             PROFILES[user].cachedData = cloudMissions;
             localStorage.setItem(PROFILES[user].storageKey, JSON.stringify(cloudMissions));
-            renderMissions(user);
+            
+            // 현재 사용자가 해당 카드 내 입력창을 타이핑 중이면 재렌더링 방지 (포커스 풀림 방지)
+            const activeElement = document.activeElement;
+            const isTypingInside = activeElement && activeElement.classList.contains('mission-input') && 
+                                   document.getElementById(`missionList-${user}`).contains(activeElement);
+            
+            if (!isTypingInside) {
+              renderMissions(user);
+            }
           } catch (e) {
             console.error("클라우드 파싱 에러:", e);
           }
         } else {
-          // 최초 실행 시 기본 데이터를 클라우드에 업로드
           const initial = getStoredData(user);
           saveStoredData(user, initial);
         }
@@ -921,7 +917,11 @@ const firebaseConfig = {
         input.className = 'mission-input';
         input.value = itemData.text;
         input.placeholder = `미션 ${i + 1} (비워둘 수 있어요)`;
-        input.oninput = (e) => handleTextChange(user, i, e.target.value);
+        
+        // 타이핑 시 로컬에만 반영 (클라우드 즉시 전송 안 함 -> 포커스 유지)
+        input.oninput = (e) => handleTextChange(user, i, e.target.value, false);
+        // 포커스를 뗄 때 클라우드에 최종 저장
+        input.onblur = (e) => handleTextChange(user, i, e.target.value, true);
 
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
@@ -993,14 +993,15 @@ const firebaseConfig = {
       updateProgress(user, checkedCount, totalTasks);
     }
 
-    function handleTextChange(user, itemIndex, newText) {
+    // 텍스트 수정 처리 함수 (syncCloud 여부 분리)
+    function handleTextChange(user, itemIndex, newText, syncCloud = false) {
       const data = getStoredData(user);
       const activeIdx = PROFILES[user].activeDayIndex;
       if (!data[activeIdx]) data[activeIdx] = [];
       if (!data[activeIdx][itemIndex]) data[activeIdx][itemIndex] = { text: '', checked: false };
       
       data[activeIdx][itemIndex].text = newText;
-      saveStoredData(user, data);
+      saveStoredData(user, data, syncCloud);
     }
 
     function handleCheckChange(user, itemIndex, isChecked) {
@@ -1010,7 +1011,7 @@ const firebaseConfig = {
       if (!data[activeIdx][itemIndex]) data[activeIdx][itemIndex] = { text: '', checked: false };
 
       data[activeIdx][itemIndex].checked = isChecked;
-      saveStoredData(user, data);
+      saveStoredData(user, data, true);
       
       renderMissions(user);
 
@@ -1047,7 +1048,7 @@ const firebaseConfig = {
       const data = getStoredData(user);
       if (data[originDay] && data[originDay][itemIndex]) {
         data[originDay][itemIndex].checked = isChecked;
-        saveStoredData(user, data);
+        saveStoredData(user, data, true);
         renderMissions(user);
 
         const checkStatus = getCompletedCount(user);
@@ -1073,7 +1074,7 @@ const firebaseConfig = {
     function manualSaveMissions(user) {
       const name = PROFILES[user].name;
       const data = getStoredData(user);
-      saveStoredData(user, data);
+      saveStoredData(user, data, true);
       renderMissions(user);
       alert(`[${name}] 설정한 모든 미션이 클라우드와 기기에 안전하게 저장되었습니다! 💾☁️`);
     }
@@ -1143,7 +1144,7 @@ const firebaseConfig = {
           });
         }
       }
-      saveStoredData(user, data);
+      saveStoredData(user, data, true);
       renderMissions(user);
     }
 
@@ -1166,7 +1167,6 @@ const firebaseConfig = {
       switchDay('hochan', mappedIndex);
       switchDay('hojun', mappedIndex);
 
-      // 클라우드 실시간 동기화 리스너 등록
       listenToCloudUpdates('hochan');
       listenToCloudUpdates('hojun');
     }
