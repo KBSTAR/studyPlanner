@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>형제 일주일 습관지키기 (호찬 & 호준)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jua&family=Nanum+Square+Round:wght@400;700;800&family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
+  
+  <!-- Firebase SDK 라이브러리 추가 -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    :root {
+      --bg-color: #fef9e7;
+      --card-bg: #ffffff;
+      --primary: #ff6b6b;
+      --yellow: #ffd166;
+      --green: #06d6a0;
+      --blue: #4cc9f0;
+      --purple: #7209b7;
+      --text: #2b2d42;
+      --border-dark: #2b2d42;
+    }
+
+    * { box-sizing: border-box; font-family: 'Nanum Square Round', sans-serif; }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text);
+      margin: 0;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-image: radial-gradient(#ffe066 1.5px, transparent 1.5px);
+      background-size: 24px 24px;
+    }
+
+    .global-header-bar {
+      width: 100%;
+      max-width: 1240px;
+      background-color: #e0f2fe;
+      border: 3.5px solid var(--border-dark);
+      border-radius: 20px;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 5px 5px 0px var(--border-dark);
+      margin-bottom: 20px;
+    }
+
+    .date-badge {
+      font-family: 'Jua', sans-serif;
+      font-size: 18px;
+      color: #0369a1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sync-status {
+      font-size: 12px;
+      font-weight: bold;
+      background: #ffffff;
+      border: 2px solid var(--border-dark);
+      border-radius: 8px;
+      padding: 2px 8px;
+      color: #15803d;
+      margin-left: 6px;
+    }
+
+    .clock-badge {
+      font-family: 'Jua', sans-serif;
+      background-color: #ffffff;
+      border: 2px solid var(--border-dark);
+      border-radius: 12px;
+      padding: 6px 14px;
+      font-size: 17px;
+      color: var(--primary);
+    }
+
+    .twins-container {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+      width: 100%;
+      max-width: 1240px;
+      align-items: start;
+    }
+
+    @media (max-width: 1024px) {
+      .twins-container { grid-template-columns: 1fr; }
+    }
+
+    .app-card {
+      background: var(--card-bg);
+      border: 3.5px solid var(--border-dark);
+      border-radius: 28px;
+      padding: 24px 18px;
+      box-shadow: 7px 7px 0px var(--border-dark);
+      position: relative;
+    }
+
+    .main-banner {
+      border: 3px solid var(--border-dark);
+      border-radius: 20px;
+      padding: 12px 14px;
+      text-align: center;
+      box-shadow: 4px 4px 0px var(--border-dark);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .banner-hochan { background-color: var(--yellow); }
+    .banner-hojun { background-color: #a7f3d0; }
+
+    .main-banner h1 {
+      margin: 0;
+      font-family: 'Jua', sans-serif;
+      font-size: 23px;
+      color: var(--border-dark);
+      letter-spacing: -0.5px;
+    }
+
+    .banner-icon { font-size: 24px; display: inline-block; }
+
+    .action-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      gap: 6px;
+    }
+
+    .tool-btn {
+      font-family: 'Jua', sans-serif;
+      font-size: 13px;
+      padding: 7px 12px;
+      border: 2px solid var(--border-dark);
+      border-radius: 12px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      box-shadow: 2px 2px 0px var(--border-dark);
+      transition: all 0.15s;
+    }
+
+    .tool-btn:hover { transform: translateY(-1px); }
+    .btn-password-reset { background-color: #fee2e2; color: #b91c1c; }
+    .btn-password-reset:hover { background-color: #fca5a5; }
+    .btn-save-missions { background-color: #dcfce7; color: #15803d; }
+    .btn-save-missions:hover { background-color: #bbf7d0; }
+
+    .days-tab-container {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 18px;
+      justify-content: space-between;
+    }
+
+    .day-tab-btn {
+      flex: 1;
+      font-family: 'Jua', sans-serif;
+      font-size: 15px;
+      padding: 8px 0;
+      background: #f1f5f9;
+      border: 2.5px solid var(--border-dark);
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 2px 2px 0px var(--border-dark);
+      transition: all 0.15s ease-in-out;
+    }
+
+    .day-tab-btn:hover { transform: translateY(-2px); }
+    .day-tab-btn.active-hochan {
+      background: var(--yellow);
+      transform: translateY(2px);
+      box-shadow: 0px 0px 0px var(--border-dark);
+    }
+    .day-tab-btn.active-hojun {
+      background: #a7f3d0;
+      transform: translateY(2px);
+      box-shadow: 0px 0px 0px var(--border-dark);
+    }
+
+    .day-tab-btn.sat { color: #0284c7; }
+    .day-tab-btn.sun { color: #e11d48; }
+
+    .mission-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 0 4px;
+    }
+
+    .title-group { display: flex; align-items: center; gap: 8px; }
+    .title-group h2 { font-family: 'Jua', sans-serif; font-size: 19px; margin: 0; color: var(--text); }
+    .character-badge { font-size: 22px; animation: bounce 1.5s infinite alternate; }
+
+    @keyframes bounce {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-4px); }
+    }
+
+    .progress-wrap {
+      background-color: #f1f5f9;
+      border: 2.5px solid var(--border-dark);
+      border-radius: 16px;
+      height: 22px;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 18px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ffd166, #06d6a0);
+      width: 0%;
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .progress-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Jua', sans-serif;
+      font-size: 13px;
+      color: var(--border-dark);
+    }
+
+    .mission-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .mission-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #ffffff;
+      border: 2.5px solid var(--border-dark);
+      border-radius: 16px;
+      padding: 9px 12px;
+      box-shadow: 3px 3px 0px var(--border-dark);
+      transition: background-color 0.2s;
+    }
+
+    .mission-item.completed { background-color: #ecfdf5; border-color: #059669; }
+    .mission-item.carryover { background-color: #fff7ed; border-color: #f97316; }
+    .mission-item.carryover.completed { background-color: #ecfdf5; border-color: #059669; }
+
+    .mission-number {
+      font-family: 'Jua', sans-serif;
+      border: 2px solid var(--border-dark);
+      border-radius: 50%;
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .num-hochan { background-color: var(--yellow); }
+    .num-hojun { background-color: #a7f3d0; }
+    .carryover .mission-number { background-color: #fb923c !important; color: #fff; }
+
+    .mission-input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      outline: none;
+      padding: 4px 0;
+    }
+
+    .mission-input::placeholder { color: #94a3b8; font-weight: 400; font-size: 14px; }
+    .mission-item.completed .mission-input { text-decoration: line-through; color: #64748b; }
+
+    .carryover-tag {
+      font-family: 'Jua', sans-serif;
+      background: #fed7aa;
+      color: #9a3412;
+      border: 1.5px solid #ea580c;
+      border-radius: 8px;
+      padding: 2px 6px;
+      font-size: 11px;
+      margin-right: 6px;
+      white-space: nowrap;
+    }
+
+    .section-divider {
+      margin: 16px 0 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'Jua', sans-serif;
+      font-size: 14px;
+      color: #c2410c;
+    }
+
+    .section-divider::before,
+    .section-divider::after {
+      content: "";
+      flex: 1;
+      height: 2px;
+      background-color: #fdba74;
+    }
+
+    .mission-checkbox {
+      appearance: none;
+      width: 30px;
+      height: 30px;
+      border: 2.5px solid var(--border-dark);
+      border-radius: 10px;
+      background-color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+
+    .mission-checkbox:checked { background-color: var(--green); border-color: var(--border-dark); }
+    .mission-checkbox:checked::after { content: '✔'; font-size: 19px; color: #ffffff; font-weight: bold; }
+
+    .stamp-container {
+      margin-top: 18px;
+      background-color: #fff1f2;
+      border: 2px dashed #fb7185;
+      border-radius: 16px;
+      padding: 12px;
+      text-align: center;
+      font-family: 'Jua', sans-serif;
+      color: #e11d48;
+      font-size: 15px;
+      display: none;
+    }
+
+    .stamp-container.show { display: block; animation: popIn 0.3s ease-out; }
+
+    @keyframes popIn {
+      0% { transform: scale(0.9); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .btn-watch-reward {
+      margin-top: 8px;
+      background-color: #4f46e5;
+      color: #ffffff;
+      border: 2px solid var(--border-dark);
+      border-radius: 10px;
+      padding: 6px 14px;
+      font-family: 'Jua', sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: 2px 2px 0px var(--border-dark);
+      transition: transform 0.1s;
+    }
+
+    .btn-watch-reward:hover { transform: translateY(-2px); }
+
+    .footer-actions {
+      margin-top: 20px;
+      padding-top: 14px;
+      border-top: 2px dashed #cbd5e1;
+      display: none;
+      justify-content: center;
+    }
+
+    .reset-btn {
+      font-family: 'Jua', sans-serif;
+      font-size: 14px;
+      background-color: #e2e8f0;
+      color: #475569;
+      border: 2px solid var(--border-dark);
+      border-radius: 12px;
+      padding: 8px 16px;
+      cursor: pointer;
+      box-shadow: 2px 2px 0px var(--border-dark);
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .reset-btn:hover { background-color: #fecdd3; color: #be123c; transform: translateY(-2px); }
+
+    .english-modal {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background-color: rgba(0, 0, 0, 0.7);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      padding: 16px;
+    }
+
+    .english-card {
+      background-color: #ffffff;
+      border: 4px solid var(--border-dark);
+      border-radius: 26px;
+      padding: 24px 20px;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 8px 8px 0px var(--border-dark);
+      position: relative;
+      animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .badge-today-english {
+      display: inline-block;
+      font-family: 'Jua', sans-serif;
+      background-color: #fed7aa;
+      color: #c2410c;
+      border: 2px solid var(--border-dark);
+      border-radius: 12px;
+      padding: 4px 12px;
+      font-size: 14px;
+      margin-bottom: 12px;
+      box-shadow: 2px 2px 0px var(--border-dark);
+    }
+
+    .english-expression-box {
+      background-color: #eef2ff;
+      border: 3px solid var(--border-dark);
+      border-radius: 20px;
+      padding: 18px 14px;
+      margin-bottom: 16px;
+      box-shadow: 4px 4px 0px var(--border-dark);
+    }
+
+    .english-text {
+      font-family: 'Fredoka', 'Jua', sans-serif;
+      font-size: 26px;
+      color: #3730a3;
+      margin: 0 0 6px 0;
+      letter-spacing: 0.5px;
+    }
+
+    .pronounce-text { font-size: 13px; color: #6366f1; font-weight: 700; margin: 0 0 10px 0; }
+    .korean-meaning { font-family: 'Jua', sans-serif; font-size: 20px; color: #e11d48; margin: 0; }
+
+    .example-box {
+      background-color: #f8fafc;
+      border: 2px dashed #94a3b8;
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 18px;
+      text-align: left;
+    }
+
+    .example-title { font-size: 11px; font-weight: 800; color: #64748b; margin-bottom: 4px; }
+    .example-en { font-size: 14px; font-weight: 700; color: #1e293b; margin: 0 0 3px 0; }
+    .example-ko { font-size: 12px; color: #64748b; margin: 0; }
+
+    .btn-tts {
+      background-color: #4f46e5;
+      color: #ffffff;
+      border: 2px solid var(--border-dark);
+      border-radius: 12px;
+      padding: 8px 16px;
+      font-family: 'Jua', sans-serif;
+      font-size: 14px;
+      cursor: pointer;
+      box-shadow: 2px 2px 0px var(--border-dark);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 12px;
+      transition: transform 0.1s;
+    }
+
+    .btn-tts:hover { transform: translateY(-2px); }
+
+    .btn-close-english {
+      font-family: 'Jua', sans-serif;
+      font-size: 16px;
+      background-color: var(--yellow);
+      border: 2.5px solid var(--border-dark);
+      border-radius: 14px;
+      padding: 10px 24px;
+      cursor: pointer;
+      box-shadow: 3px 3px 0px var(--border-dark);
+      width: 100%;
+    }
+
+    .btn-close-english:hover { background-color: #fcd34d; }
+  </style>
+</head>
+<body>
+
+  <div class="global-header-bar">
+    <div class="date-badge">
+      <span>📅</span>
+      <span id="currentDate">로딩 중...</span>
+      <span class="sync-status" id="cloudStatus">클라우드 준비 중</span>
+    </div>
+    <div class="clock-badge" id="currentTime">⏰ 00:00:00</div>
+  </div>
+
+  <div class="twins-container">
+    
+    <!-- 호찬 카드 -->
+    <div class="app-card" id="card-hochan">
+      <div class="main-banner banner-hochan">
+        <span class="banner-icon">⭐</span>
+        <h1>윤호찬의 일주일 습관지키기</h1>
+        <span class="banner-icon">🚀</span>
+      </div>
+
+      <div class="action-toolbar">
+        <button class="tool-btn btn-password-reset" onclick="handleSecureReset('hochan')">🔒 체크리스트 초기화</button>
+        <button class="tool-btn btn-save-missions" onclick="manualSaveMissions('hochan')">💾 현재 미션 저장</button>
+      </div>
+
+      <div class="days-tab-container" id="tabs-hochan">
+        <button class="day-tab-btn" onclick="switchDay('hochan', 0)">월</button>
+        <button class="day-tab-btn" onclick="switchDay('hochan', 1)">화</button>
+        <button class="day-tab-btn" onclick="switchDay('hochan', 2)">수</button>
+        <button class="day-tab-btn" onclick="switchDay('hochan', 3)">목</button>
+        <button class="day-tab-btn" onclick="switchDay('hochan', 4)">금</button>
+        <button class="day-tab-btn sat" onclick="switchDay('hochan', 5)">토</button>
+        <button class="day-tab-btn sun" onclick="switchDay('hochan', 6)">일</button>
+      </div>
+
+      <div class="mission-header">
+        <div class="title-group">
+          <span class="character-badge" id="dayEmoji-hochan">🚀</span>
+          <h2 id="dayTitle-hochan">월요일의 미션</h2>
+        </div>
+      </div>
+
+      <div class="progress-wrap">
+        <div class="progress-fill" id="progressFill-hochan"></div>
+        <div class="progress-text" id="progressText-hochan">0 / 5 완료</div>
+      </div>
+
+      <div class="mission-list" id="missionList-hochan"></div>
+
+      <div class="stamp-container" id="stampMessage-hochan">
+        <div>🎉 호찬아 대단해! 오늘의 모든 미션을 완벽히 해냈어! 🌟</div>
+        <button class="btn-watch-reward" onclick="openRewardModal('hochan')">💡 오늘의 재미있는 영어표현 보기</button>
+      </div>
+
+      <div class="footer-actions" id="sundayResetArea-hochan">
+        <button class="reset-btn" onclick="resetAllWeeklyChecks('hochan')">
+          🔄 새로운 한 주 시작 (체크 비우기)
+        </button>
+      </div>
+    </div>
+
+    <!-- 호준 카드 -->
+    <div class="app-card" id="card-hojun">
+      <div class="main-banner banner-hojun">
+        <span class="banner-icon">🍀</span>
+        <h1>윤호준의 일주일 습관지키기</h1>
+        <span class="banner-icon">🎮</span>
+      </div>
+
+      <div class="action-toolbar">
+        <button class="tool-btn btn-password-reset" onclick="handleSecureReset('hojun')">🔒 체크리스트 초기화</button>
+        <button class="tool-btn btn-save-missions" onclick="manualSaveMissions('hojun')">💾 현재 미션 저장</button>
+      </div>
+
+      <div class="days-tab-container" id="tabs-hojun">
+        <button class="day-tab-btn" onclick="switchDay('hojun', 0)">월</button>
+        <button class="day-tab-btn" onclick="switchDay('hojun', 1)">화</button>
+        <button class="day-tab-btn" onclick="switchDay('hojun', 2)">수</button>
+        <button class="day-tab-btn" onclick="switchDay('hojun', 3)">목</button>
+        <button class="day-tab-btn" onclick="switchDay('hojun', 4)">금</button>
+        <button class="day-tab-btn sat" onclick="switchDay('hojun', 5)">토</button>
+        <button class="day-tab-btn sun" onclick="switchDay('hojun', 6)">일</button>
+      </div>
+
+      <div class="mission-header">
+        <div class="title-group">
+          <span class="character-badge" id="dayEmoji-hojun">🍀</span>
+          <h2 id="dayTitle-hojun">월요일의 미션</h2>
+        </div>
+      </div>
+
+      <div class="progress-wrap">
+        <div class="progress-fill" id="progressFill-hojun"></div>
+        <div class="progress-text" id="progressText-hojun">0 / 5 완료</div>
+      </div>
+
+      <div class="mission-list" id="missionList-hojun"></div>
+
+      <div class="stamp-container" id="stampMessage-hojun">
+        <div>🎉 호준아 최고야! 오늘의 모든 미션을 멋지게 끝냈어! 🌟</div>
+        <button class="btn-watch-reward" onclick="openRewardModal('hojun')">💡 오늘의 재미있는 영어표현 보기</button>
+      </div>
+
+      <div class="footer-actions" id="sundayResetArea-hojun">
+        <button class="reset-btn" onclick="resetAllWeeklyChecks('hojun')">
+          🔄 새로운 한 주 시작 (체크 비우기)
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 영어표현 모달 -->
+  <div class="english-modal" id="rewardModal">
+    <div class="english-card">
+      <div class="badge-today-english" id="badgeModalDay">🎯 완료 특별 보상</div>
+      
+      <div class="english-expression-box">
+        <h3 class="english-text" id="engWord">Piece of cake!</h3>
+        <div class="pronounce-text" id="engPron">[ 피스 오브 케이크 ]</div>
+        <div class="korean-meaning" id="engMeaning">"식은 죽 먹기야! (완전 쉬워!)"</div>
+      </div>
+
+      <div class="example-box">
+        <div class="example-title">💬 이럴 때 쓰는 표현이에요:</div>
+        <p class="example-en" id="engExamEn">"Today's mission? It's a piece of cake!"</p>
+        <p class="example-ko" id="engExamKo">"오늘 미션? 완전 식은 죽 먹기지!"</p>
+      </div>
+
+      <div>
+        <button class="btn-tts" onclick="speakEnglish()">🔊 영어 발음 듣기</button>
+      </div>
+
+      <button class="btn-close-english" onclick="closeRewardModal()">알겠어요! (다 배웠어요!)</button>
+    </div>
+  </div>
+
+  <script>
+    /* ==========================================================================
+       1. 여기에 본인의 Firebase 설정 정보를 붙여넣으세요
+       ========================================================================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyBzB_TlwmNhgaNZiMZjaTpLLHHsA0x7nUg",
+  authDomain: "hobrosstudyplanner.firebaseapp.com",
+  projectId: "hobrosstudyplanner",
+  storageBucket: "hobrosstudyplanner.firebasestorage.app",
+  messagingSenderId: "747595635594",
+  appId: "1:747595635594:web:9f05a2fac5985c6bd94673",
+  measurementId: "G-7J2WEG807K"
+};
+
+
+    // Firebase 초기화
+    let db = null;
+    let isCloudActive = false;
+
+    try {
+      if (firebaseConfig.apiKey && !firebaseConfig.apiKey.includes("여기에")) {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+        isCloudActive = true;
+        document.getElementById('cloudStatus').textContent = "☁️ 클라우드 실시간 연동 중";
+      } else {
+        document.getElementById('cloudStatus').textContent = "💾 로컬 모드 (키 미입력)";
+      }
+    } catch (e) {
+      console.warn("Firebase 연동 오류. 로컬 저장소로 자동 전환합니다.", e);
+      document.getElementById('cloudStatus').textContent = "⚠️ 로컬 모드";
+    }
+
+    /* ==========================================================================
+       2. 기본 데이터 및 앱 로직
+       ========================================================================== */
+    const DAY_NAMES = ["월요일", "화요일", "수요일", "목요일", "금요일", "토요일", "일요일"];
+    const DAY_SHORT = ["월", "화", "수", "목", "금", "토", "일"];
+    const DAY_EMOJIS_HOCHAN = ["🚀", "💡", "🌈", "⚡", "🍭", "🏖️", "🎈"];
+    const DAY_EMOJIS_HOJUN  = ["🍀", "🎯", "🎨", "⚽", "🍦", "⛺", "🔮"];
+    const MISSION_COUNT = 5;
+
+    function createInitialMissions() {
+      return {
+        0: [ // 월[cite: 1]
+          { text: "수학: 원리셈", checked: false },
+          { text: "독서논술", checked: false },
+          { text: "책읽기", checked: false },
+          { text: "영어숙제", checked: false },
+          { text: "영어숙제", checked: false }
+        ],
+        1: [ // 화[cite: 1]
+          { text: "소마셈", checked: false },
+          { text: "독서논술", checked: false },
+          { text: "책읽기", checked: false },
+          { text: "단어시험", checked: false },
+          { text: "단어시험", checked: false }
+        ],
+        2: [ // 수[cite: 1]
+          { text: "원리셈", checked: false },
+          { text: "독서논술", checked: false },
+          { text: "책읽기", checked: false },
+          { text: "영어숙제", checked: false },
+          { text: "영어숙제", checked: false }
+        ],
+        3: [ // 목[cite: 1]
+          { text: "소마셈", checked: false },
+          { text: "독서논술", checked: false },
+          { text: "책읽기", checked: false },
+          { text: "단어시험", checked: false },
+          { text: "단어시험", checked: false }
+        ],
+        4: [ // 금[cite: 1]
+          { text: "원리셈", checked: false },
+          { text: "독서논술", checked: false },
+          { text: "책읽기", checked: false },
+          { text: "영어숙제", checked: false },
+          { text: "영어숙제", checked: false }
+        ],
+        5: [ // 토[cite: 1]
+          { text: "팩토: 원, 자", checked: false },
+          { text: "", checked: false },
+          { text: "", checked: false },
+          { text: "", checked: false },
+          { text: "", checked: false }
+        ],
+        6: [ // 일[cite: 1]
+          { text: "영어단어시", checked: false },
+          { text: "", checked: false },
+          { text: "", checked: false },
+          { text: "", checked: false },
+          { text: "", checked: false }
+        ]
+      };
+    }
+
+    const ENGLISH_HOCHAN = [
+      { day: "월요일", en: "Piece of cake!", pron: "[ 피스 오브 케이크! ]", ko: "식은 죽 먹기야! (완전 쉬워!) 🍰", exEn: "Today's missions? It's a piece of cake!", exKo: "오늘 미션? 완전 식은 죽 먹기지!" },
+      { day: "화요일", en: "Break a leg!", pron: "[ 브레이크 어 레그! ]", ko: "행운을 빌어! (파이팅!) 🍀", exEn: "You have a test today? Break a leg!", exKo: "오늘 시험 봐? 파이팅, 행운을 빌어!" },
+      { day: "수요일", en: "Raining cats and dogs!", pron: "[ 레이닝 캣츠 앤 독스! ]", ko: "비가 억수같이 쏟아져! 🐶🐱", exEn: "Look outside! It's raining cats and dogs!", exKo: "밖을 봐! 비가 엄청나게 쏟아져!" },
+      { day: "목요일", en: "I'm all ears!", pron: "[ 아임 올 이어즈! ]", ko: "귀 기울여 들을 준비 완료! (집중!) 👂", exEn: "Tell me your fun story! I'm all ears!", exKo: "재미있는 이야기 들려줘! 귀 쫑긋 듣고 있어!" },
+      { day: "금요일", en: "Under the weather", pron: "[ 언더 더 웨더 ]", ko: "몸이 찌뿌둥해 / 컨디션이 별로야 🤒", exEn: "I feel a bit under the weather today.", exKo: "나 오늘 몸이 조금 찌뿌둥하고 안 좋아." },
+      { day: "토요일", en: "Catch some Z's!", pron: "[ 캐치 썸 지즈! ]", ko: "쿨쿨 꿀잠 자러 가자! 😴💤", exEn: "It's weekend! Time to catch some Z's!", exKo: "주말이다! 이제 푹 꿀잠 잘 시간!" },
+      { day: "일요일", en: "You nailed it!", pron: "[ 유 네일드 잇! ]", ko: "완벽하게 해냈어! (짱이야!) 🔨⭐", exEn: "All weekly habits done! You nailed it!", exKo: "일주일 습관 모두 완수! 완벽하게 해냈어!" }
+    ];
+
+    const ENGLISH_HOJUN = [
+      { day: "월요일", en: "Hit the books!", pron: "[ 힛 더 북스! ]", ko: "열심히 공부하러 가자! (책 펴자!) 📚", exEn: "Time to hit the books and finish homework!", exKo: "이제 책 펴고 숙제 열심히 끝낼 시간이야!" },
+      { day: "화요일", en: "Over the moon!", pron: "[ 오버 더 문! ]", ko: "세상을 다 가진 듯 너무 행복해! 🌙✨", exEn: "I finished all tasks, I'm over the moon!", exKo: "미션을 다 끝냈더니 기분이 날아갈 것 같아!" },
+      { day: "수요일", en: "Spill the beans!", pron: "[ 스필 더 빈즈! ]", ko: "비밀을 털어놔 봐! (말해줘!) 🫘", exEn: "Come on, spill the beans! What's the plan?", exKo: "어서 털어놔 봐! 무슨 계획이 있어?" },
+      { day: "목요일", en: "Cost an arm and a leg", pron: "[ 코스트 언 암 앤 어 레그 ]", ko: "너무너무 비싸다! 💰😲", exEn: "That super cool robot costs an arm and a leg!", exKo: "저 멋진 로봇 장난감은 너무너무 비싸!" },
+      { day: "금요일", en: "Once in a blue moon", pron: "[ 원스 인 어 블루 문 ]", ko: "아주아주 드물게 (어쩌다 한번) 🌕", exEn: "I eat sweet cotton candy once in a blue moon.", exKo: "달콤한 솜사탕은 어쩌다 한번 먹어." },
+      { day: "토요일", en: "Keep your chin up!", pron: "[ 킵 유어 친 업! ]", ko: "고개 들고 힘내! (풀죽지 마!) 🦁💪", exEn: "Don't be sad! Keep your chin up!", exKo: "슬퍼하지 마! 당당하게 고개 들고 힘내!" },
+      { day: "일요일", en: "Top of the world!", pron: "[ 탑 오브 더 월드! ]", ko: "세상에서 최고로 기분 좋아! 🌍👑", exEn: "I feel on top of the world today!", exKo: "오늘 세상에서 최고로 기분이 좋아!" }
+    ];
+
+    const PROFILES = {
+      hochan: {
+        name: "윤호찬",
+        storageKey: "yoon_hochan_mission_v4_custom_default",
+        activeDayIndex: 0,
+        emojis: DAY_EMOJIS_HOCHAN,
+        themeClass: "active-hochan",
+        numClass: "num-hochan",
+        englishList: ENGLISH_HOCHAN,
+        cachedData: null
+      },
+      hojun: {
+        name: "윤호준",
+        storageKey: "yoon_hojun_mission_v4_custom_default",
+        activeDayIndex: 0,
+        emojis: DAY_EMOJIS_HOJUN,
+        themeClass: "active-hojun",
+        numClass: "num-hojun",
+        englishList: ENGLISH_HOJUN,
+        cachedData: null
+      }
+    };
+
+    let currentSpeakingText = "Piece of cake!";
+
+    function updateClock() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth() + 1;
+      const date = now.getDate();
+      const dayIndex = now.getDay();
+      const dayKor = ['일', '월', '화', '수', '목', '금', '토'][dayIndex];
+      
+      document.getElementById('currentDate').textContent = `${year}년 ${month}월 ${date}일 (${dayKor})`;
+
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      document.getElementById('currentTime').textContent = `⏰ ${hours}:${minutes}:${seconds}`;
+
+      const isSunday = (dayIndex === 0);
+      ['hochan', 'hojun'].forEach(user => {
+        const resetArea = document.getElementById(`sundayResetArea-${user}`);
+        resetArea.style.display = isSunday ? 'flex' : 'none';
+      });
+    }
+
+    // 데이터 가져오기 (캐시 ➔ 로컬스토리지 ➔ 기본값)
+    function getStoredData(user) {
+      if (PROFILES[user].cachedData) {
+        return PROFILES[user].cachedData;
+      }
+      const key = PROFILES[user].storageKey;
+      const data = localStorage.getItem(key);
+      if (data) {
+        PROFILES[user].cachedData = JSON.parse(data);
+        return PROFILES[user].cachedData;
+      }
+      const initial = createInitialMissions();
+      saveStoredData(user, initial);
+      return initial;
+    }
+
+    // 데이터 저장 (로컬 저장 + 클라우드 Firestore 동시 저장)
+    function saveStoredData(user, data) {
+      PROFILES[user].cachedData = data;
+      localStorage.setItem(PROFILES[user].storageKey, JSON.stringify(data));
+
+      if (isCloudActive && db) {
+        // 클라우드 Firestore의 'habits' 컬렉션에 자동 동기화
+        db.collection("habits").doc(user).set({
+          missions: JSON.stringify(data),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(err => {
+          console.error("클라우드 저장 실패:", err);
+        });
+      }
+    }
+
+    // 클라우드 실시간 변경 감지 리스너 (다른 기기에서 변경 시 내 화면도 1초 만에 자동 갱신)
+    function listenToCloudUpdates(user) {
+      if (!isCloudActive || !db) return;
+
+      db.collection("habits").doc(user).onSnapshot(doc => {
+        if (doc.exists && doc.data().missions) {
+          try {
+            const cloudMissions = JSON.parse(doc.data().missions);
+            PROFILES[user].cachedData = cloudMissions;
+            localStorage.setItem(PROFILES[user].storageKey, JSON.stringify(cloudMissions));
+            renderMissions(user);
+          } catch (e) {
+            console.error("클라우드 파싱 에러:", e);
+          }
+        } else {
+          // 최초 실행 시 기본 데이터를 클라우드에 업로드
+          const initial = getStoredData(user);
+          saveStoredData(user, initial);
+        }
+      }, err => {
+        console.error("클라우드 동기화 실패:", err);
+      });
+    }
+
+    function switchDay(user, index) {
+      PROFILES[user].activeDayIndex = index;
+      
+      const tabButtons = document.querySelectorAll(`#tabs-${user} .day-tab-btn`);
+      tabButtons.forEach((tab, i) => {
+        tab.classList.toggle(PROFILES[user].themeClass, i === index);
+      });
+
+      document.getElementById(`dayTitle-${user}`).textContent = `${DAY_NAMES[index]}의 미션`;
+      document.getElementById(`dayEmoji-${user}`).textContent = PROFILES[user].emojis[index];
+
+      renderMissions(user);
+    }
+
+    function getIncompleteWeekdayMissions(user) {
+      const data = getStoredData(user);
+      const incomplete = [];
+
+      for (let day = 0; day < 5; day++) {
+        const dayList = data[day] || [];
+        dayList.forEach((item, itemIdx) => {
+          if (item && item.text && item.text.trim() !== "" && !item.checked) {
+            incomplete.push({
+              originDay: day,
+              itemIndex: itemIdx,
+              text: item.text,
+              checked: item.checked
+            });
+          }
+        });
+      }
+      return incomplete;
+    }
+
+    function renderMissions(user) {
+      const data = getStoredData(user);
+      const activeIdx = PROFILES[user].activeDayIndex;
+      const currentList = data[activeIdx] || [];
+      const listContainer = document.getElementById(`missionList-${user}`);
+      listContainer.innerHTML = '';
+
+      let checkedCount = 0;
+      let totalTasks = 0;
+
+      for (let i = 0; i < MISSION_COUNT; i++) {
+        const itemData = currentList[i] || { text: '', checked: false };
+        if (itemData.text && itemData.text.trim() !== "") {
+          totalTasks++;
+        }
+        if (itemData.checked) checkedCount++;
+
+        const itemDiv = document.createElement('div');
+        itemDiv.className = `mission-item ${itemData.checked ? 'completed' : ''}`;
+
+        const numDiv = document.createElement('div');
+        numDiv.className = `mission-number ${PROFILES[user].numClass}`;
+        numDiv.textContent = i + 1;
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'mission-input';
+        input.value = itemData.text;
+        input.placeholder = `미션 ${i + 1} (비워둘 수 있어요)`;
+        input.oninput = (e) => handleTextChange(user, i, e.target.value);
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'mission-checkbox';
+        checkbox.checked = itemData.checked;
+        checkbox.onchange = (e) => handleCheckChange(user, i, e.target.checked);
+
+        itemDiv.appendChild(numDiv);
+        itemDiv.appendChild(input);
+        itemDiv.appendChild(checkbox);
+
+        listContainer.appendChild(itemDiv);
+      }
+
+      if (activeIdx === 5 || activeIdx === 6) {
+        const incompleteMissions = getIncompleteWeekdayMissions(user);
+
+        if (incompleteMissions.length > 0) {
+          totalTasks += incompleteMissions.length;
+
+          const divider = document.createElement('div');
+          divider.className = 'section-divider';
+          divider.innerHTML = `<span>🔥 평일에 놓친 보충 미션 (${incompleteMissions.length}개)</span>`;
+          listContainer.appendChild(divider);
+
+          incompleteMissions.forEach((incItem) => {
+            if (incItem.checked) checkedCount++;
+
+            const itemDiv = document.createElement('div');
+            itemDiv.className = `mission-item carryover ${incItem.checked ? 'completed' : ''}`;
+
+            const badge = document.createElement('div');
+            badge.className = 'mission-number';
+            badge.textContent = '!';
+
+            const contentWrap = document.createElement('div');
+            contentWrap.style.flex = "1";
+            contentWrap.style.display = "flex";
+            contentWrap.style.alignItems = "center";
+
+            const tag = document.createElement('span');
+            tag.className = 'carryover-tag';
+            tag.textContent = `${DAY_SHORT[incItem.originDay]}요일`;
+
+            const textSpan = document.createElement('span');
+            textSpan.className = 'mission-input';
+            textSpan.textContent = incItem.text;
+
+            contentWrap.appendChild(tag);
+            contentWrap.appendChild(textSpan);
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'mission-checkbox';
+            checkbox.checked = incItem.checked;
+            checkbox.onchange = (e) => {
+              handleCarryoverCheckChange(user, incItem.originDay, incItem.itemIndex, e.target.checked);
+            };
+
+            itemDiv.appendChild(badge);
+            itemDiv.appendChild(contentWrap);
+            itemDiv.appendChild(checkbox);
+
+            listContainer.appendChild(itemDiv);
+          });
+        }
+      }
+
+      updateProgress(user, checkedCount, totalTasks);
+    }
+
+    function handleTextChange(user, itemIndex, newText) {
+      const data = getStoredData(user);
+      const activeIdx = PROFILES[user].activeDayIndex;
+      if (!data[activeIdx]) data[activeIdx] = [];
+      if (!data[activeIdx][itemIndex]) data[activeIdx][itemIndex] = { text: '', checked: false };
+      
+      data[activeIdx][itemIndex].text = newText;
+      saveStoredData(user, data);
+    }
+
+    function handleCheckChange(user, itemIndex, isChecked) {
+      const data = getStoredData(user);
+      const activeIdx = PROFILES[user].activeDayIndex;
+      if (!data[activeIdx]) data[activeIdx] = [];
+      if (!data[activeIdx][itemIndex]) data[activeIdx][itemIndex] = { text: '', checked: false };
+
+      data[activeIdx][itemIndex].checked = isChecked;
+      saveStoredData(user, data);
+      
+      renderMissions(user);
+
+      const checkStatus = getCompletedCount(user);
+      if (isChecked && checkStatus.total > 0 && checkStatus.count === checkStatus.total) {
+        openRewardModal(user);
+      }
+    }
+
+    function getCompletedCount(user) {
+      const data = getStoredData(user);
+      const activeIdx = PROFILES[user].activeDayIndex;
+      const currentList = data[activeIdx] || [];
+      let count = 0;
+      let total = 0;
+
+      for (let i = 0; i < MISSION_COUNT; i++) {
+        if (currentList[i] && currentList[i].text && currentList[i].text.trim() !== "") {
+          total++;
+          if (currentList[i].checked) count++;
+        }
+      }
+
+      if (activeIdx === 5 || activeIdx === 6) {
+        const inc = getIncompleteWeekdayMissions(user);
+        total += inc.length;
+        inc.forEach(item => { if (item.checked) count++; });
+      }
+
+      return { count, total };
+    }
+
+    function handleCarryoverCheckChange(user, originDay, itemIndex, isChecked) {
+      const data = getStoredData(user);
+      if (data[originDay] && data[originDay][itemIndex]) {
+        data[originDay][itemIndex].checked = isChecked;
+        saveStoredData(user, data);
+        renderMissions(user);
+
+        const checkStatus = getCompletedCount(user);
+        if (isChecked && checkStatus.total > 0 && checkStatus.count === checkStatus.total) {
+          openRewardModal(user);
+        }
+      }
+    }
+
+    function updateProgress(user, count, total) {
+      const percent = total > 0 ? (count / total) * 100 : 0;
+      document.getElementById(`progressFill-${user}`).style.width = `${percent}%`;
+      document.getElementById(`progressText-${user}`).textContent = `${count} / ${total} 완료!`;
+
+      const stamp = document.getElementById(`stampMessage-${user}`);
+      if (count === total && total > 0) {
+        stamp.classList.add('show');
+      } else {
+        stamp.classList.remove('show');
+      }
+    }
+
+    function manualSaveMissions(user) {
+      const name = PROFILES[user].name;
+      const data = getStoredData(user);
+      saveStoredData(user, data);
+      renderMissions(user);
+      alert(`[${name}] 설정한 모든 미션이 클라우드와 기기에 안전하게 저장되었습니다! 💾☁️`);
+    }
+
+    function openRewardModal(user) {
+      const activeIdx = PROFILES[user].activeDayIndex;
+      const reward = PROFILES[user].englishList[activeIdx] || PROFILES[user].englishList[0];
+      const name = PROFILES[user].name;
+
+      document.getElementById('badgeModalDay').textContent = `🎯 ${name}의 ${DAY_NAMES[activeIdx]} 완료 특별 보상`;
+      document.getElementById('engWord').textContent = reward.en;
+      document.getElementById('engPron').textContent = reward.pron;
+      document.getElementById('engMeaning').textContent = `"${reward.ko}"`;
+      document.getElementById('engExamEn').textContent = `"${reward.exEn}"`;
+      document.getElementById('engExamKo').textContent = `"${reward.exKo}"`;
+
+      currentSpeakingText = reward.en;
+
+      document.getElementById('rewardModal').style.display = 'flex';
+    }
+
+    function closeRewardModal() {
+      document.getElementById('rewardModal').style.display = 'none';
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    }
+
+    function speakEnglish() {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(currentSpeakingText);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.85;
+        utterance.pitch = 1.1;
+        window.speechSynthesis.speak(utterance);
+      } else {
+        alert("이 브라우저에서는 음성 발음 기능을 지원하지 않습니다.");
+      }
+    }
+
+    document.getElementById('rewardModal').addEventListener('click', (e) => {
+      if (e.target.id === 'rewardModal') {
+        closeRewardModal();
+      }
+    });
+
+    function handleSecureReset(user) {
+      const name = PROFILES[user].name;
+      const password = prompt(`[${name}] 체크리스트 초기화 비밀번호 4자리를 입력해주세요:`);
+      if (password === null) return;
+
+      if (password === "0209") {
+        executeCheckReset(user);
+        alert(`[${name}]의 모든 체크 표시가 초기화되었습니다! 파이팅! 🚀`);
+      } else {
+        alert("비밀번호가 일치하지 않습니다.");
+      }
+    }
+
+    function executeCheckReset(user) {
+      const data = getStoredData(user);
+      for (let day = 0; day < 7; day++) {
+        if (data[day]) {
+          data[day].forEach(mission => {
+            mission.checked = false;
+          });
+        }
+      }
+      saveStoredData(user, data);
+      renderMissions(user);
+    }
+
+    function resetAllWeeklyChecks(user) {
+      const name = PROFILES[user].name;
+      const confirmed = confirm(`[${name}] 작성해 둔 미션 내용은 그대로 유지돼요!\n월요일부터 일요일까지의 체크 표시만 0으로 비울까요?`);
+      if (!confirmed) return;
+
+      executeCheckReset(user);
+      alert(`[${name}] 새로운 한 주를 멋지게 시작해봐요! 화이팅! 🚀`);
+    }
+
+    function initApp() {
+      updateClock();
+      setInterval(updateClock, 1000);
+
+      const dayOfWeek = new Date().getDay();
+      const mappedIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+
+      switchDay('hochan', mappedIndex);
+      switchDay('hojun', mappedIndex);
+
+      // 클라우드 실시간 동기화 리스너 등록
+      listenToCloudUpdates('hochan');
+      listenToCloudUpdates('hojun');
+    }
+
+    initApp();
+  </script>
+</body>
+</html>
