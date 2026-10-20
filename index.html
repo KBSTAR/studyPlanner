@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Jua&family=Nanum+Square+Round:wght@400;700;800&family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
   
-  <!-- Firebase SDK 라이브러리 추가 -->
+  <!-- Firebase SDK 라이브러리 -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
@@ -675,50 +675,50 @@
 
     function createInitialMissions() {
       return {
-        0: [ // 월
+        0: [
           { text: "수학: 원리셈", checked: false },
           { text: "독서논술", checked: false },
           { text: "책읽기", checked: false },
           { text: "영어숙제", checked: false },
           { text: "영어숙제", checked: false }
         ],
-        1: [ // 화
+        1: [
           { text: "소마셈", checked: false },
           { text: "독서논술", checked: false },
           { text: "책읽기", checked: false },
           { text: "단어시험", checked: false },
           { text: "단어시험", checked: false }
         ],
-        2: [ // 수
+        2: [
           { text: "원리셈", checked: false },
           { text: "독서논술", checked: false },
           { text: "책읽기", checked: false },
           { text: "영어숙제", checked: false },
           { text: "영어숙제", checked: false }
         ],
-        3: [ // 목
+        3: [
           { text: "소마셈", checked: false },
           { text: "독서논술", checked: false },
           { text: "책읽기", checked: false },
           { text: "단어시험", checked: false },
           { text: "단어시험", checked: false }
         ],
-        4: [ // 금
+        4: [
           { text: "원리셈", checked: false },
           { text: "독서논술", checked: false },
           { text: "책읽기", checked: false },
           { text: "영어숙제", checked: false },
           { text: "영어숙제", checked: false }
         ],
-        5: [ // 토
+        5: [
           { text: "팩토: 원, 자", checked: false },
           { text: "", checked: false },
           { text: "", checked: false },
           { text: "", checked: false },
           { text: "", checked: false }
         ],
-        6: [ // 일
-          { text: "영어단어시", checked: false },
+        6: [
+          { text: "영어단어시험", checked: false },
           { text: "", checked: false },
           { text: "", checked: false },
           { text: "", checked: false },
@@ -823,7 +823,6 @@
       }
     }
 
-    // 클라우드 동기화 리스너
     function listenToCloudUpdates(user) {
       if (!isCloudActive || !db) return;
 
@@ -834,7 +833,6 @@
             PROFILES[user].cachedData = cloudMissions;
             localStorage.setItem(PROFILES[user].storageKey, JSON.stringify(cloudMissions));
             
-            // 현재 사용자가 해당 카드 내 입력창을 타이핑 중이면 재렌더링 방지 (포커스 풀림 방지)
             const activeElement = document.activeElement;
             const isTypingInside = activeElement && activeElement.classList.contains('mission-input') && 
                                    document.getElementById(`missionList-${user}`).contains(activeElement);
@@ -918,9 +916,7 @@
         input.value = itemData.text;
         input.placeholder = `미션 ${i + 1} (비워둘 수 있어요)`;
         
-        // 타이핑 시 로컬에만 반영 (클라우드 즉시 전송 안 함 -> 포커스 유지)
         input.oninput = (e) => handleTextChange(user, i, e.target.value, false);
-        // 포커스를 뗄 때 클라우드에 최종 저장
         input.onblur = (e) => handleTextChange(user, i, e.target.value, true);
 
         const checkbox = document.createElement('input');
@@ -993,7 +989,6 @@
       updateProgress(user, checkedCount, totalTasks);
     }
 
-    // 텍스트 수정 처리 함수 (syncCloud 여부 분리)
     function handleTextChange(user, itemIndex, newText, syncCloud = false) {
       const data = getStoredData(user);
       const activeIdx = PROFILES[user].activeDayIndex;
@@ -1092,7 +1087,6 @@
       document.getElementById('engExamKo').textContent = `"${reward.exKo}"`;
 
       currentSpeakingText = reward.en;
-
       document.getElementById('rewardModal').style.display = 'flex';
     }
 
