@@ -40,8 +40,9 @@
       </div>
 
       <div class="action-toolbar">
-        <button class="tool-btn btn-password-reset" onclick="handleSecureReset('hochan')">🔒 체크리스트 초기화</button>
-        <button class="tool-btn btn-save-missions" onclick="manualSaveMissions('hochan')">💾 현재 미션 저장</button>
+        <button class="tool-btn btn-lock-toggle" id="lockBtn-hochan" onclick="toggleMissionLock('hochan')">🔒 미션 잠금</button>
+        <button class="tool-btn btn-password-reset" onclick="handleSecureReset('hochan')">🔄 체크 초기화</button>
+        <button class="tool-btn btn-save-missions" onclick="manualSaveMissions('hochan')">💾 미션 저장</button>
       </div>
 
       <div class="days-tab-container" id="tabs-hochan">
@@ -89,8 +90,9 @@
       </div>
 
       <div class="action-toolbar">
-        <button class="tool-btn btn-password-reset" onclick="handleSecureReset('hojun')">🔒 체크리스트 초기화</button>
-        <button class="tool-btn btn-save-missions" onclick="manualSaveMissions('hojun')">💾 현재 미션 저장</button>
+        <button class="tool-btn btn-lock-toggle" id="lockBtn-hojun" onclick="toggleMissionLock('hojun')">🔒 미션 잠금</button>
+        <button class="tool-btn btn-password-reset" onclick="handleSecureReset('hojun')">🔄 체크 초기화</button>
+        <button class="tool-btn btn-save-missions" onclick="manualSaveMissions('hojun')">💾 미션 저장</button>
       </div>
 
       <div class="days-tab-container" id="tabs-hojun">
