@@ -13,17 +13,20 @@ let isCloudActive = false;
 
 // Firebase 초기화
 try {
-  if (firebaseConfig.apiKey && !firebaseConfig.apiKey.includes("여기에")) {
+  if (typeof firebase !== 'undefined' && firebaseConfig.apiKey && !firebaseConfig.apiKey.includes("여기에")) {
     firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
     isCloudActive = true;
-    document.getElementById('cloudStatus').textContent = "☁️ 클라우드 실시간 연동 중";
+    const statusEl = document.getElementById('cloudStatus');
+    if (statusEl) statusEl.textContent = "☁️ 클라우드 실시간 연동 중";
   } else {
-    document.getElementById('cloudStatus').textContent = "💾 로컬 모드 (키 미입력)";
+    const statusEl = document.getElementById('cloudStatus');
+    if (statusEl) statusEl.textContent = "💾 로컬 모드 (키 미입력)";
   }
 } catch (e) {
   console.warn("Firebase 연동 오류. 로컬 저장소로 자동 전환합니다.", e);
-  document.getElementById('cloudStatus').textContent = "⚠️ 로컬 모드";
+  const statusEl = document.getElementById('cloudStatus');
+  if (statusEl) statusEl.textContent = "⚠️ 로컬 모드";
 }
 
 const DAY_NAMES = ["월요일", "화요일", "수요일", "목요일", "금요일", "토요일", "일요일"];
@@ -144,30 +147,37 @@ function updateClock() {
   const dayIndex = now.getDay();
   const dayKor = ['일', '월', '화', '수', '목', '금', '토'][dayIndex];
   
-  document.getElementById('currentDate').textContent = `${year}년 ${month}월 ${date}일 (${dayKor})`;
+  const dateEl = document.getElementById('currentDate');
+  if (dateEl) {
+    dateEl.textContent = `${year}년 ${month}월 ${date}일 (${dayKor})`;
+  }
 
   const hours = String(now.getHours()).padStart(2, '0');
   const minutes = String(now.getMinutes()).padStart(2, '0');
   const seconds = String(now.getSeconds()).padStart(2, '0');
-  document.getElementById('currentTime').textContent = `⏰ ${hours}:${minutes}:${seconds}`;
+  const timeEl = document.getElementById('currentTime');
+  if (timeEl) {
+    timeEl.textContent = `⏰ ${hours}:${minutes}:${seconds}`;
+  }
 
   const isSunday = (dayIndex === 0);
   ['hochan', 'hojun'].forEach(user => {
     const resetArea = document.getElementById(`sundayResetArea-${user}`);
-    resetArea.style.display = isSunday ? 'flex' : 'none';
+    if (resetArea) {
+      resetArea.style.display = isSunday ? 'flex' : 'none';
+    }
   });
 }
 
-// 잠금 상태 초기화 및 토글 함수
 function initLockState(user) {
   const savedState = localStorage.getItem(PROFILES[user].lockKey);
-  // 기본값은 잠금(true) 상태
   PROFILES[user].isLocked = savedState !== null ? JSON.parse(savedState) : true;
   updateLockButtonUI(user);
 }
 
 function updateLockButtonUI(user) {
   const lockBtn = document.getElementById(`lockBtn-${user}`);
+  if (!lockBtn) return;
   const isLocked = PROFILES[user].isLocked;
   if (isLocked) {
     lockBtn.innerHTML = "🔒 미션 잠김";
@@ -181,7 +191,6 @@ function updateLockButtonUI(user) {
 function toggleMissionLock(user) {
   const profile = PROFILES[user];
   if (profile.isLocked) {
-    // 잠금 해제 시도 -> 0209 비밀번호 요구
     const pwd = prompt(`[${profile.name}] 미션 수정을 위해 비밀번호 4자리를 입력해주세요:`);
     if (pwd === null) return;
 
@@ -195,7 +204,6 @@ function toggleMissionLock(user) {
       alert("비밀번호가 일치하지 않습니다.");
     }
   } else {
-    // 이미 열려있을 때 누르면 즉시 잠금
     profile.isLocked = true;
     localStorage.setItem(profile.lockKey, JSON.stringify(true));
     updateLockButtonUI(user);
@@ -211,11 +219,15 @@ function getStoredData(user) {
   const key = PROFILES[user].storageKey;
   const data = localStorage.getItem(key);
   if (data) {
-    PROFILES[user].cachedData = JSON.parse(data);
-    return PROFILES[user].cachedData;
+    try {
+      PROFILES[user].cachedData = JSON.parse(data);
+      return PROFILES[user].cachedData;
+    } catch (e) {
+      console.warn("로컬 데이터 파싱 오류", e);
+    }
   }
   const initial = createInitialMissions();
-  saveStoredData(user, initial);
+  saveStoredData(user, initial, false);
   return initial;
 }
 
@@ -244,8 +256,10 @@ function listenToCloudUpdates(user) {
         localStorage.setItem(PROFILES[user].storageKey, JSON.stringify(cloudMissions));
         
         const activeElement = document.activeElement;
-        const isTypingInside = activeElement && activeElement.classList.contains('mission-input') && 
-                               document.getElementById(`missionList-${user}`).contains(activeElement);
+        const listEl = document.getElementById(`missionList-${user}`);
+        const isTypingInside = activeElement && 
+                               activeElement.classList.contains('mission-input') && 
+                               listEl && listEl.contains(activeElement);
         
         if (!isTypingInside) {
           renderMissions(user);
@@ -255,7 +269,7 @@ function listenToCloudUpdates(user) {
       }
     } else {
       const initial = getStoredData(user);
-      saveStoredData(user, initial);
+      saveStoredData(user, initial, true);
     }
   }, err => {
     console.error("클라우드 동기화 실패:", err);
@@ -270,8 +284,11 @@ function switchDay(user, index) {
     tab.classList.toggle(PROFILES[user].themeClass, i === index);
   });
 
-  document.getElementById(`dayTitle-${user}`).textContent = `${DAY_NAMES[index]}의 미션`;
-  document.getElementById(`dayEmoji-${user}`).textContent = PROFILES[user].emojis[index];
+  const titleEl = document.getElementById(`dayTitle-${user}`);
+  if (titleEl) titleEl.textContent = `${DAY_NAMES[index]}의 미션`;
+
+  const emojiEl = document.getElementById(`dayEmoji-${user}`);
+  if (emojiEl) emojiEl.textContent = PROFILES[user].emojis[index];
 
   renderMissions(user);
 }
@@ -302,6 +319,7 @@ function renderMissions(user) {
   const activeIdx = profile.activeDayIndex;
   const currentList = data[activeIdx] || [];
   const listContainer = document.getElementById(`missionList-${user}`);
+  if (!listContainer) return;
   listContainer.innerHTML = '';
 
   let checkedCount = 0;
@@ -327,7 +345,6 @@ function renderMissions(user) {
     input.value = itemData.text;
     input.placeholder = `미션 ${i + 1} (비워둘 수 있어요)`;
     
-    // 잠금 상태인 경우 수정 불가 처리
     if (profile.isLocked) {
       input.disabled = true;
     }
@@ -406,7 +423,7 @@ function renderMissions(user) {
 }
 
 function handleTextChange(user, itemIndex, newText, syncCloud = false) {
-  if (PROFILES[user].isLocked) return; // 잠겨있으면 수정 무시
+  if (PROFILES[user].isLocked) return;
 
   const data = getStoredData(user);
   const activeIdx = PROFILES[user].activeDayIndex;
@@ -473,14 +490,18 @@ function handleCarryoverCheckChange(user, originDay, itemIndex, isChecked) {
 
 function updateProgress(user, count, total) {
   const percent = total > 0 ? (count / total) * 100 : 0;
-  document.getElementById(`progressFill-${user}`).style.width = `${percent}%`;
-  document.getElementById(`progressText-${user}`).textContent = `${count} / ${total} 완료!`;
+  const fillEl = document.getElementById(`progressFill-${user}`);
+  const textEl = document.getElementById(`progressText-${user}`);
+  if (fillEl) fillEl.style.width = `${percent}%`;
+  if (textEl) textEl.textContent = `${count} / ${total} 완료!`;
 
   const stamp = document.getElementById(`stampMessage-${user}`);
-  if (count === total && total > 0) {
-    stamp.classList.add('show');
-  } else {
-    stamp.classList.remove('show');
+  if (stamp) {
+    if (count === total && total > 0) {
+      stamp.classList.add('show');
+    } else {
+      stamp.classList.remove('show');
+    }
   }
 }
 
@@ -506,11 +527,13 @@ function openRewardModal(user) {
 
   currentSpeakingText = reward.en;
 
-  document.getElementById('rewardModal').style.display = 'flex';
+  const modal = document.getElementById('rewardModal');
+  if (modal) modal.style.display = 'flex';
 }
 
 function closeRewardModal() {
-  document.getElementById('rewardModal').style.display = 'none';
+  const modal = document.getElementById('rewardModal');
+  if (modal) modal.style.display = 'none';
   if ('speechSynthesis' in window) {
     window.speechSynthesis.cancel();
   }
@@ -529,11 +552,14 @@ function speakEnglish() {
   }
 }
 
-document.getElementById('rewardModal').addEventListener('click', (e) => {
-  if (e.target.id === 'rewardModal') {
-    closeRewardModal();
-  }
-});
+const rewardModalEl = document.getElementById('rewardModal');
+if (rewardModalEl) {
+  rewardModalEl.addEventListener('click', (e) => {
+    if (e.target.id === 'rewardModal') {
+      closeRewardModal();
+    }
+  });
+}
 
 function handleSecureReset(user) {
   const name = PROFILES[user].name;
@@ -577,7 +603,6 @@ function initApp() {
   const dayOfWeek = new Date().getDay();
   const mappedIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
 
-  // 잠금 상태 초기화
   initLockState('hochan');
   initLockState('hojun');
 
@@ -588,4 +613,9 @@ function initApp() {
   listenToCloudUpdates('hojun');
 }
 
-initApp();
+// 문서 로드 완료 후 실행
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
