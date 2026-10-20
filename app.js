@@ -31,6 +31,7 @@ const DAY_SHORT = ["월", "화", "수", "목", "금", "토", "일"];
 const DAY_EMOJIS_HOCHAN = ["🚀", "💡", "🌈", "⚡", "🍭", "🏖️", "🎈"];
 const DAY_EMOJIS_HOJUN  = ["🍀", "🎯", "🎨", "⚽", "🍦", "⛺", "🔮"];
 const MISSION_COUNT = 5;
+const ADMIN_PASSWORD = "0209";
 
 function createInitialMissions() {
   return {
@@ -110,6 +111,8 @@ const PROFILES = {
   hochan: {
     name: "윤호찬",
     storageKey: "yoon_hochan_mission_v4_custom_default",
+    lockKey: "yoon_hochan_is_locked",
+    isLocked: true,
     activeDayIndex: 0,
     emojis: DAY_EMOJIS_HOCHAN,
     themeClass: "active-hochan",
@@ -120,6 +123,8 @@ const PROFILES = {
   hojun: {
     name: "윤호준",
     storageKey: "yoon_hojun_mission_v4_custom_default",
+    lockKey: "yoon_hojun_is_locked",
+    isLocked: true,
     activeDayIndex: 0,
     emojis: DAY_EMOJIS_HOJUN,
     themeClass: "active-hojun",
@@ -151,6 +156,52 @@ function updateClock() {
     const resetArea = document.getElementById(`sundayResetArea-${user}`);
     resetArea.style.display = isSunday ? 'flex' : 'none';
   });
+}
+
+// 잠금 상태 초기화 및 토글 함수
+function initLockState(user) {
+  const savedState = localStorage.getItem(PROFILES[user].lockKey);
+  // 기본값은 잠금(true) 상태
+  PROFILES[user].isLocked = savedState !== null ? JSON.parse(savedState) : true;
+  updateLockButtonUI(user);
+}
+
+function updateLockButtonUI(user) {
+  const lockBtn = document.getElementById(`lockBtn-${user}`);
+  const isLocked = PROFILES[user].isLocked;
+  if (isLocked) {
+    lockBtn.innerHTML = "🔒 미션 잠김";
+    lockBtn.classList.add("is-locked");
+  } else {
+    lockBtn.innerHTML = "🔓 편집 가능";
+    lockBtn.classList.remove("is-locked");
+  }
+}
+
+function toggleMissionLock(user) {
+  const profile = PROFILES[user];
+  if (profile.isLocked) {
+    // 잠금 해제 시도 -> 0209 비밀번호 요구
+    const pwd = prompt(`[${profile.name}] 미션 수정을 위해 비밀번호 4자리를 입력해주세요:`);
+    if (pwd === null) return;
+
+    if (pwd === ADMIN_PASSWORD) {
+      profile.isLocked = false;
+      localStorage.setItem(profile.lockKey, JSON.stringify(false));
+      updateLockButtonUI(user);
+      renderMissions(user);
+      alert(`[${profile.name}] 잠금이 해제되었습니다. 미션을 자유롭게 수정할 수 있습니다! ✍️`);
+    } else {
+      alert("비밀번호가 일치하지 않습니다.");
+    }
+  } else {
+    // 이미 열려있을 때 누르면 즉시 잠금
+    profile.isLocked = true;
+    localStorage.setItem(profile.lockKey, JSON.stringify(true));
+    updateLockButtonUI(user);
+    renderMissions(user);
+    alert(`[${profile.name}] 미션이 안전하게 잠겼습니다! 🔒`);
+  }
 }
 
 function getStoredData(user) {
@@ -247,7 +298,8 @@ function getIncompleteWeekdayMissions(user) {
 
 function renderMissions(user) {
   const data = getStoredData(user);
-  const activeIdx = PROFILES[user].activeDayIndex;
+  const profile = PROFILES[user];
+  const activeIdx = profile.activeDayIndex;
   const currentList = data[activeIdx] || [];
   const listContainer = document.getElementById(`missionList-${user}`);
   listContainer.innerHTML = '';
@@ -266,7 +318,7 @@ function renderMissions(user) {
     itemDiv.className = `mission-item ${itemData.checked ? 'completed' : ''}`;
 
     const numDiv = document.createElement('div');
-    numDiv.className = `mission-number ${PROFILES[user].numClass}`;
+    numDiv.className = `mission-number ${profile.numClass}`;
     numDiv.textContent = i + 1;
 
     const input = document.createElement('input');
@@ -275,6 +327,11 @@ function renderMissions(user) {
     input.value = itemData.text;
     input.placeholder = `미션 ${i + 1} (비워둘 수 있어요)`;
     
+    // 잠금 상태인 경우 수정 불가 처리
+    if (profile.isLocked) {
+      input.disabled = true;
+    }
+
     input.oninput = (e) => handleTextChange(user, i, e.target.value, false);
     input.onblur = (e) => handleTextChange(user, i, e.target.value, true);
 
@@ -349,6 +406,8 @@ function renderMissions(user) {
 }
 
 function handleTextChange(user, itemIndex, newText, syncCloud = false) {
+  if (PROFILES[user].isLocked) return; // 잠겨있으면 수정 무시
+
   const data = getStoredData(user);
   const activeIdx = PROFILES[user].activeDayIndex;
   if (!data[activeIdx]) data[activeIdx] = [];
@@ -481,7 +540,7 @@ function handleSecureReset(user) {
   const password = prompt(`[${name}] 체크리스트 초기화 비밀번호 4자리를 입력해주세요:`);
   if (password === null) return;
 
-  if (password === "0209") {
+  if (password === ADMIN_PASSWORD) {
     executeCheckReset(user);
     alert(`[${name}]의 모든 체크 표시가 초기화되었습니다! 파이팅! 🚀`);
   } else {
@@ -504,4 +563,29 @@ function executeCheckReset(user) {
 
 function resetAllWeeklyChecks(user) {
   const name = PROFILES[user].name;
-  const confirmed = confirm
+  const confirmed = confirm(`[${name}] 작성해 둔 미션 내용은 그대로 유지돼요!\n월요일부터 일요일까지의 체크 표시만 0으로 비울까요?`);
+  if (!confirmed) return;
+
+  executeCheckReset(user);
+  alert(`[${name}] 새로운 한 주를 멋지게 시작해봐요! 화이팅! 🚀`);
+}
+
+function initApp() {
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  const dayOfWeek = new Date().getDay();
+  const mappedIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+
+  // 잠금 상태 초기화
+  initLockState('hochan');
+  initLockState('hojun');
+
+  switchDay('hochan', mappedIndex);
+  switchDay('hojun', mappedIndex);
+
+  listenToCloudUpdates('hochan');
+  listenToCloudUpdates('hojun');
+}
+
+initApp();
