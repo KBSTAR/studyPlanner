@@ -236,10 +236,15 @@ function openPointMap(childKey) {
   currentMapChild = childKey;
   const childName = childKey === 'hochan' ? '윤호찬' : '윤호준';
 
-  document.getElementById('mapModalTitle').textContent = `⚡ [${childName}] 포켓몬 포인트 어드벤처 맵`;
+  const titleEl = document.getElementById('mapModalTitle');
+  if (titleEl) {
+    titleEl.textContent = `⚡ [${childName}] 포켓몬 포인트 어드벤처 맵`;
+  }
 
+  // 보드판 타일 생성
   renderDirectMapBoard();
 
+  // 👉 display를 flex로 설정하여 화면 정중앙 배치
   const modalEl = document.getElementById('pointMapModal');
   if (modalEl) {
     modalEl.style.display = 'flex';
