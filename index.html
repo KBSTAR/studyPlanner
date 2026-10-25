@@ -1,164 +1,266 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>형제 일주일 습관지키기 (호찬 & 호준)</title>
-  
-  <!-- 웹 폰트 -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Jua&family=Nanum+Square+Round:wght@400;700;800&family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
-  
-  <!-- 스타일 시트 분리 연결 -->
-  <link rel="stylesheet" href="style.css">
-  
-  <!-- Firebase SDK 라이브러리 -->
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>형제 일주일 습관지키기 (호찬 & 호준)</title>
+
+<!-- 웹 폰트 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Nanum+Square+Round:wght@400;700;800&family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
+
+<!-- 스타일 시트 분리 연결 -->
+<link rel="stylesheet" href="style.css">
+
+<!-- Firebase SDK 라이브러리 -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
-  <!-- 상단 공통 바 -->
-  <div class="global-header-bar">
-    <div class="date-badge">
-      <span>📅</span>
-      <span id="currentDate">로딩 중...</span>
-      <span class="sync-status" id="cloudStatus">클라우드 준비 중</span>
+<!-- 상단 공통 바 -->
+<div class="global-header-bar">
+  <div class="date-badge">
+    <span>📅</span>
+    <span id="currentDate">로딩 중...</span>
+    <span class="sync-status" id="cloudStatus">클라우드 준비 중</span>
+  </div>
+  <div class="clock-badge" id="currentTime">⏰ 00:00:00</div>
+</div>
+
+<div class="twins-container">
+
+  <!-- ================= 호찬 카드 ================= -->
+  <div class="app-card" id="card-hochan">
+    <div class="main-banner banner-hochan">
+      <span class="banner-icon">⭐</span>
+      <h1>윤호찬의 일주일 습관지키기</h1>
+      <span class="banner-icon">🚀</span>
     </div>
-    <div class="clock-badge" id="currentTime">⏰ 00:00:00</div>
+
+    <!-- 쿠폰/포인트맵 액션 툴바 -->
+    <div class="reward-status-bar">
+      <div class="coupon-badge">
+        <span class="badge-icon">🎟️</span>
+        <span class="badge-label">보유 쿠폰:</span>
+        <strong id="couponCount-hochan">0</strong> 장
+      </div>
+      <div class="reward-btns">
+        <button class="btn-open-shop" onclick="openCouponModal('hochan')">🎁 쿠폰 사용/발급</button>
+        <button class="btn-open-map" onclick="openPointMap('hochan')">🗺️ 포인트 맵</button>
+      </div>
+    </div>
+
+    <!-- 상단 툴바: 미션 저장 우측에 자물쇠 아이콘 토글 배치 -->
+    <div class="action-toolbar">
+      <button class="tool-btn btn-save-missions" onclick="manualSaveMissions('hochan')">💾 미션 저장</button>
+      <button class="tool-btn btn-lock-icon-toggle is-locked" id="lockBtn-hochan" onclick="toggleMissionLock('hochan')" title="미션 편집 잠금/해제">🔒</button>
+    </div>
+
+    <!-- 요일 탭 -->
+    <div class="days-tab-container" id="tabs-hochan">
+      <button class="day-tab-btn" onclick="switchDay('hochan', 0)">월</button>
+      <button class="day-tab-btn" onclick="switchDay('hochan', 1)">화</button>
+      <button class="day-tab-btn" onclick="switchDay('hochan', 2)">수</button>
+      <button class="day-tab-btn" onclick="switchDay('hochan', 3)">목</button>
+      <button class="day-tab-btn" onclick="switchDay('hochan', 4)">금</button>
+      <button class="day-tab-btn sat" onclick="switchDay('hochan', 5)">토</button>
+      <button class="day-tab-btn sun" onclick="switchDay('hochan', 6)">일</button>
+    </div>
+
+    <!-- 요일 미션 제목 & 보유 포인트 배지 -->
+    <div class="mission-header">
+      <div class="title-group">
+        <span class="character-badge" id="dayEmoji-hochan">🚀</span>
+        <h2 id="dayTitle-hochan">월요일의 미션</h2>
+      </div>
+      <div class="header-point-badge" onclick="openSecurePointManager('hochan')" title="클릭하여 포인트 직접 수정 (비밀번호 필요)" style="cursor: pointer;">
+        <span class="point-icon">💰</span>
+        <span class="point-text">보유 포인트:</span>
+        <strong id="point-hochan">0</strong> <span class="unit">P</span>
+      </div>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="progress-fill" id="progressFill-hochan"></div>
+      <div class="progress-text" id="progressText-hochan">0 / 5 완료</div>
+    </div>
+
+    <!-- 미션 목록 -->
+    <div class="mission-list" id="missionList-hochan"></div>
+
+    <!-- 축하 스탬프 메시지 -->
+    <div class="stamp-container" id="stampMessage-hochan">
+      <div>🎉 호찬아 대단해! 오늘의 모든 미션을 완벽히 해냈어! 🌟</div>
+      <button class="btn-watch-reward" onclick="openRewardModal('hochan')">💡 오늘의 재미있는 영어표현 보기</button>
+    </div>
+
+    <!-- 주말 정산 및 주간 리셋 -->
+    <div class="footer-actions" id="sundayResetArea-hochan">
+      <button class="score-btn" onclick="settleWeeklyScore('hochan')">
+        🏆 주간 점수 정산하기 (완료일에 따라 포인트 적립)
+      </button>
+      <button class="reset-btn" onclick="resetAllWeeklyChecks('hochan')">
+        🔄 새로운 한 주 시작 (체크 비우기)
+      </button>
+    </div>
   </div>
 
-  <div class="twins-container">
-    
-    <!-- 호찬 카드 -->
-    <div class="app-card" id="card-hochan">
-      <div class="main-banner banner-hochan">
-        <span class="banner-icon">⭐</span>
-        <h1>윤호찬의 일주일 습관지키기</h1>
-        <span class="banner-icon">🚀</span>
+  <!-- ================= 호준 카드 ================= -->
+  <div class="app-card" id="card-hojun">
+    <div class="main-banner banner-hojun">
+      <span class="banner-icon">🍀</span>
+      <h1>윤호준의 일주일 습관지키기</h1>
+      <span class="banner-icon">🎮</span>
+    </div>
+
+    <!-- 쿠폰/포인트맵 액션 툴바 -->
+    <div class="reward-status-bar">
+      <div class="coupon-badge">
+        <span class="badge-icon">🎟️</span>
+        <span class="badge-label">보유 쿠폰:</span>
+        <strong id="couponCount-hojun">0</strong> 장
       </div>
-
-      <div class="action-toolbar">
-        <button class="tool-btn btn-lock-toggle" id="lockBtn-hochan" onclick="toggleMissionLock('hochan')">🔒 미션 잠금</button>
-        <button class="tool-btn btn-password-reset" onclick="handleSecureReset('hochan')">🔄 체크 초기화</button>
-        <button class="tool-btn btn-save-missions" onclick="manualSaveMissions('hochan')">💾 미션 저장</button>
-      </div>
-
-      <div class="days-tab-container" id="tabs-hochan">
-        <button class="day-tab-btn" onclick="switchDay('hochan', 0)">월</button>
-        <button class="day-tab-btn" onclick="switchDay('hochan', 1)">화</button>
-        <button class="day-tab-btn" onclick="switchDay('hochan', 2)">수</button>
-        <button class="day-tab-btn" onclick="switchDay('hochan', 3)">목</button>
-        <button class="day-tab-btn" onclick="switchDay('hochan', 4)">금</button>
-        <button class="day-tab-btn sat" onclick="switchDay('hochan', 5)">토</button>
-        <button class="day-tab-btn sun" onclick="switchDay('hochan', 6)">일</button>
-      </div>
-
-      <div class="mission-header">
-        <div class="title-group">
-          <span class="character-badge" id="dayEmoji-hochan">🚀</span>
-          <h2 id="dayTitle-hochan">월요일의 미션</h2>
-        </div>
-      </div>
-
-      <div class="progress-wrap">
-        <div class="progress-fill" id="progressFill-hochan"></div>
-        <div class="progress-text" id="progressText-hochan">0 / 5 완료</div>
-      </div>
-
-      <div class="mission-list" id="missionList-hochan"></div>
-
-      <div class="stamp-container" id="stampMessage-hochan">
-        <div>🎉 호찬아 대단해! 오늘의 모든 미션을 완벽히 해냈어! 🌟</div>
-        <button class="btn-watch-reward" onclick="openRewardModal('hochan')">💡 오늘의 재미있는 영어표현 보기</button>
-      </div>
-
-      <div class="footer-actions" id="sundayResetArea-hochan">
-        <button class="reset-btn" onclick="resetAllWeeklyChecks('hochan')">
-          🔄 새로운 한 주 시작 (체크 비우기)
-        </button>
+      <div class="reward-btns">
+        <button class="btn-open-shop" onclick="openCouponModal('hojun')">🎁 쿠폰 사용/발급</button>
+        <button class="btn-open-map" onclick="openPointMap('hojun')">🗺️ 포인트 맵</button>
       </div>
     </div>
 
-    <!-- 호준 카드 -->
-    <div class="app-card" id="card-hojun">
-      <div class="main-banner banner-hojun">
-        <span class="banner-icon">🍀</span>
-        <h1>윤호준의 일주일 습관지키기</h1>
-        <span class="banner-icon">🎮</span>
+    <!-- 상단 툴바: 미션 저장 우측에 자물쇠 아이콘 토글 배치 -->
+    <div class="action-toolbar">
+      <button class="tool-btn btn-save-missions" onclick="manualSaveMissions('hojun')">💾 미션 저장</button>
+      <button class="tool-btn btn-lock-icon-toggle is-locked" id="lockBtn-hojun" onclick="toggleMissionLock('hojun')" title="미션 편집 잠금/해제">🔒</button>
+    </div>
+
+    <!-- 요일 탭 -->
+    <div class="days-tab-container" id="tabs-hojun">
+      <button class="day-tab-btn" onclick="switchDay('hojun', 0)">월</button>
+      <button class="day-tab-btn" onclick="switchDay('hojun', 1)">화</button>
+      <button class="day-tab-btn" onclick="switchDay('hojun', 2)">수</button>
+      <button class="day-tab-btn" onclick="switchDay('hojun', 3)">목</button>
+      <button class="day-tab-btn" onclick="switchDay('hojun', 4)">금</button>
+      <button class="day-tab-btn sat" onclick="switchDay('hojun', 5)">토</button>
+      <button class="day-tab-btn sun" onclick="switchDay('hojun', 6)">일</button>
+    </div>
+
+    <!-- 요일 미션 제목 & 보유 포인트 배지 -->
+    <div class="mission-header">
+      <div class="title-group">
+        <span class="character-badge" id="dayEmoji-hojun">🍀</span>
+        <h2 id="dayTitle-hojun">월요일의 미션</h2>
       </div>
-
-      <div class="action-toolbar">
-        <button class="tool-btn btn-lock-toggle" id="lockBtn-hojun" onclick="toggleMissionLock('hojun')">🔒 미션 잠금</button>
-        <button class="tool-btn btn-password-reset" onclick="handleSecureReset('hojun')">🔄 체크 초기화</button>
-        <button class="tool-btn btn-save-missions" onclick="manualSaveMissions('hojun')">💾 미션 저장</button>
-      </div>
-
-      <div class="days-tab-container" id="tabs-hojun">
-        <button class="day-tab-btn" onclick="switchDay('hojun', 0)">월</button>
-        <button class="day-tab-btn" onclick="switchDay('hojun', 1)">화</button>
-        <button class="day-tab-btn" onclick="switchDay('hojun', 2)">수</button>
-        <button class="day-tab-btn" onclick="switchDay('hojun', 3)">목</button>
-        <button class="day-tab-btn" onclick="switchDay('hojun', 4)">금</button>
-        <button class="day-tab-btn sat" onclick="switchDay('hojun', 5)">토</button>
-        <button class="day-tab-btn sun" onclick="switchDay('hojun', 6)">일</button>
-      </div>
-
-      <div class="mission-header">
-        <div class="title-group">
-          <span class="character-badge" id="dayEmoji-hojun">🍀</span>
-          <h2 id="dayTitle-hojun">월요일의 미션</h2>
-        </div>
-      </div>
-
-      <div class="progress-wrap">
-        <div class="progress-fill" id="progressFill-hojun"></div>
-        <div class="progress-text" id="progressText-hojun">0 / 5 완료</div>
-      </div>
-
-      <div class="mission-list" id="missionList-hojun"></div>
-
-      <div class="stamp-container" id="stampMessage-hojun">
-        <div>🎉 호준아 최고야! 오늘의 모든 미션을 멋지게 끝냈어! 🌟</div>
-        <button class="btn-watch-reward" onclick="openRewardModal('hojun')">💡 오늘의 재미있는 영어표현 보기</button>
-      </div>
-
-      <div class="footer-actions" id="sundayResetArea-hojun">
-        <button class="reset-btn" onclick="resetAllWeeklyChecks('hojun')">
-          🔄 새로운 한 주 시작 (체크 비우기)
-        </button>
+      <div class="header-point-badge" onclick="openSecurePointManager('hojun')" title="클릭하여 포인트 직접 수정 (비밀번호 필요)" style="cursor: pointer;">
+        <span class="point-icon">💰</span>
+        <span class="point-text">보유 포인트:</span>
+        <strong id="point-hojun">0</strong> <span class="unit">P</span>
       </div>
     </div>
 
+    <div class="progress-wrap">
+      <div class="progress-fill" id="progressFill-hojun"></div>
+      <div class="progress-text" id="progressText-hojun">0 / 5 완료</div>
+    </div>
+
+    <!-- 미션 목록 -->
+    <div class="mission-list" id="missionList-hojun"></div>
+
+    <!-- 축하 스탬프 메시지 -->
+    <div class="stamp-container" id="stampMessage-hojun">
+      <div>🎉 호준아 최고야! 오늘의 모든 미션을 멋지게 끝냈어! 🌟</div>
+      <button class="btn-watch-reward" onclick="openRewardModal('hojun')">💡 오늘의 재미있는 영어표현 보기</button>
+    </div>
+
+    <!-- 주말 정산 및 주간 리셋 -->
+    <div class="footer-actions" id="sundayResetArea-hojun">
+      <button class="score-btn" onclick="settleWeeklyScore('hojun')">
+        🏆 주간 점수 정산하기 (완료일에 따라 포인트 적립)
+      </button>
+      <button class="reset-btn" onclick="resetAllWeeklyChecks('hojun')">
+        🔄 새로운 한 주 시작 (체크 비우기)
+      </button>
+    </div>
   </div>
 
-  <!-- 영어표현 모달 -->
-  <div class="english-modal" id="rewardModal">
-    <div class="english-card">
-      <div class="badge-today-english" id="badgeModalDay">🎯 완료 특별 보상</div>
+</div>
+
+<!-- 영어표현 모달 -->
+<div class="english-modal" id="rewardModal">
+  <div class="english-card">
+    <div class="badge-today-english" id="badgeModalDay">🎯 완료 특별 보상</div>
+    <div class="english-expression-box">
+      <h3 class="english-text" id="engWord">Piece of cake!</h3>
+      <div class="pronounce-text" id="engPron">[ 피스 오브 케이크 ]</div>
+      <div class="korean-meaning" id="engMeaning">"식은 죽 먹기야! (완전 쉬워!)"</div>
+    </div>
+    <div class="example-box">
+      <div class="example-title">💬 이럴 때 쓰는 표현이에요:</div>
+      <p class="example-en" id="engExamEn">"Today's mission? It's a piece of cake!"</p>
+      <p class="example-ko" id="engExamKo">"오늘 미션? 완전 식은 죽 먹기지!"</p>
+    </div>
+    <div>
+      <button class="btn-tts" onclick="speakEnglish()">🔊 영어 발음 듣기</button>
+    </div>
+    <button class="btn-close-english" onclick="closeRewardModal()">알겠어요! (다 배웠어요!)</button>
+  </div>
+</div>
+
+<!-- ================= 포인트 맵 레이어 팝업 모달 (독립 배치) ================= -->
+<div class="map-modal-overlay" id="pointMapModal" style="display: none;">
+  <div class="map-modal-window">
+    <div class="map-modal-header">
+      <div class="map-header-left">
+        <h2 id="mapModalTitle">⚡ [윤호찬] 포켓몬 포인트 어드벤처 맵</h2>
+        <div class="map-target-status">
+          현재 총 누적 점수: <strong id="mapCumulativeScore">0</strong> P
+        </div>
+      </div>
+      <button class="btn-close-map-modal" onclick="closePointMapModal()">✕</button>
+    </div>
+
+    <!-- 스크롤 가능한 50P ~ 6,800P 보드게임 트랙 영역 -->
+    <div class="map-modal-body">
+      <div class="track-grid" id="modalBoardTrack"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= 쿠폰 상점 및 보유 쿠폰함 모달 ================= -->
+<div class="coupon-modal-overlay" id="couponModal" style="display: none;">
+  <div class="coupon-modal-window">
+    <div class="modal-header">
+      <h2 id="modalTargetChildTitle">🎁 호찬이의 쿠폰 상점</h2>
+      <button class="btn-close-modal" onclick="closeCouponModal()">✕</button>
+    </div>
+
+    <!-- 모달 내 탭 -->
+    <div class="coupon-nav-tabs">
+      <button class="c-tab-btn active" id="tabBtn-store" onclick="switchCouponTab('store')">🛒 포인트로 쿠폰 교환 (1,000P)</button>
+      <button class="c-tab-btn" id="tabBtn-mycoupons" onclick="switchCouponTab('mycoupons')">🎟️ 내가 가진 쿠폰 사용하기</button>
+    </div>
+
+    <!-- 탭 1: 쿠폰 상점 -->
+    <div class="coupon-view-panel" id="panel-store">
+      <div class="panel-desc">1,000 포인트를 모으면 실제 쿠폰 1장을 발급받을 수 있어요!</div>
       
-      <div class="english-expression-box">
-        <h3 class="english-text" id="engWord">Piece of cake!</h3>
-        <div class="pronounce-text" id="engPron">[ 피스 오브 케이크 ]</div>
-        <div class="korean-meaning" id="engMeaning">"식은 죽 먹기야! (완전 쉬워!)"</div>
-      </div>
+      <div class="coupon-category-title">✨ 하고 싶어요 쿠폰</div>
+      <div class="coupon-grid" id="actionCouponsList"></div>
 
-      <div class="example-box">
-        <div class="example-title">💬 이럴 때 쓰는 표현이에요:</div>
-        <p class="example-en" id="engExamEn">"Today's mission? It's a piece of cake!"</p>
-        <p class="example-ko" id="engExamKo">"오늘 미션? 완전 식은 죽 먹기지!"</p>
-      </div>
+      <div class="coupon-category-title">🛍️ 내 맘대로 쇼핑 쿠폰</div>
+      <div class="coupon-grid" id="shoppingCouponsList"></div>
+    </div>
 
-      <div>
-        <button class="btn-tts" onclick="speakEnglish()">🔊 영어 발음 듣기</button>
-      </div>
-
-      <button class="btn-close-english" onclick="closeRewardModal()">알겠어요! (다 배웠어요!)</button>
+    <!-- 탭 2: 보유 쿠폰 목록 -->
+    <div class="coupon-view-panel" id="panel-mycoupons" style="display: none;">
+      <div class="panel-desc">부모님께 보여드리고 '사용하기' 버튼을 누르세요!</div>
+      <div class="my-coupon-list" id="myCouponListContainer"></div>
     </div>
   </div>
+</div>
 
-  <!-- 자바스크립트 분리 연결 -->
-  <script src="app.js"></script>
+<!-- 자바스크립트 분리 연결 -->
+<script src="app.js"></script>
+<script src="reward-system.js"></script>
 </body>
 </html>
