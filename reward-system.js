@@ -29,7 +29,7 @@ let rewardData = {
 
 let currentModalChild = 'hochan';
 
-// 1. [핵심] 체크 상태에 따라 차액만큼 지갑에 가감 (절대 기본 잔액을 0으로 덮어쓰지 않음)
+// 1. [수정] 보유 포인트와 포인트 맵 점수 완전 일치 동기화
 function calculateAutoScore(childKey) {
   if (!rewardData[childKey]) {
     rewardData[childKey] = { point: 0, cumulativePoint: 0, coupons: [], dayGrantedScores: [0, 0, 0, 0, 0] };
@@ -63,34 +63,94 @@ function calculateAutoScore(childKey) {
 
     const doneCount = validMissions.filter(item => item.checked === true).length;
 
-    // 현재 체크 상태 기준 마땅히 받아야 할 점수
     let expectedScore = 0;
     if (doneCount === totalCount && totalCount > 0) {
-      expectedScore = 100; // 전체 완료 시 100점
+      expectedScore = 100; // 전부 완료 시 100점
     } else if (doneCount > 0) {
-      expectedScore = 50;  // 일부 완료 시 50점
+      expectedScore = 50;  // 1개 이상 부족 완료 시 50점
     }
 
-    // 이번 주에 해당 요일에 이미 지급받았던 점수
     const alreadyGranted = rewardData[childKey].dayGrantedScores[day] || 0;
     const diff = expectedScore - alreadyGranted;
 
-    // 변경된 점수 차이만큼만 보유 포인트에 가산
     if (diff !== 0) {
+      // 보유 포인트 증감 반영
       rewardData[childKey].point = Math.max(0, (rewardData[childKey].point || 0) + diff);
-      
-      // 누적 포인트는 점수가 오를 때만 증가
-      if (diff > 0) {
-        rewardData[childKey].cumulativePoint = (rewardData[childKey].cumulativePoint || 0) + diff;
-      }
-      
       rewardData[childKey].dayGrantedScores[day] = expectedScore;
     }
   }
 
+  // 👉 [핵심] 포인트 맵의 누적 점수도 보유 포인트와 완벽히 동일하게 일치시킴!
+  rewardData[childKey].cumulativePoint = rewardData[childKey].point;
+
   updateRewardDashboard(childKey);
+
+  // 포인트 맵이 열려 있다면 즉시 화면 동기화
+  const modalEl = document.getElementById('pointMapModal');
+  if (modalEl && modalEl.classList.contains('show') && typeof renderDirectMapBoard === 'function') {
+    renderDirectMapBoard();
+  }
+
   saveRewardToFirebase();
 }
+
+// 2. [수정] 포인트 맵 보드판 렌더링 시 현재 보유 포인트 기준 사용
+function renderDirectMapBoard() {
+  const container = document.getElementById('modalBoardTrack');
+  const scoreEl = document.getElementById('mapCumulativeScore');
+  if (!container) return;
+  container.innerHTML = '';
+
+  // 보유 포인트(point)를 기준으로 일치시킴
+  const pts = rewardData[currentMapChild]?.point || 0;
+  rewardData[currentMapChild].cumulativePoint = pts; // 데이터 정합성 보장
+
+  if (scoreEl) scoreEl.textContent = pts.toLocaleString();
+
+  // 50점 단위 칸 계산
+  const currentStep = Math.floor(pts / 50) * 50;
+
+  const avatarImg = currentMapChild === 'hochan' 
+    ? 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png' 
+    : 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/133.png';
+  const avatarTag = currentMapChild === 'hochan' ? '호찬 피카츄' : '호준 이브이';
+
+  for (let p = 50; p <= 6800; p += 50) {
+    const tile = document.createElement('div');
+    tile.className = 'tile';
+
+    const poke = POKEMON_MAP[p];
+
+    if (poke) {
+      if (poke.coupon) {
+        tile.classList.add('bonus');
+        tile.innerHTML += `<span class="coupon-tag">🎟️${poke.coupon}</span>`;
+      } else {
+        tile.classList.add('milestone');
+      }
+      tile.innerHTML += `<img src="${poke.img}" class="tile-poke-img" alt="${poke.name}">`;
+    }
+
+    if (pts >= p) {
+      tile.classList.add('passed');
+    }
+
+    // 현재 점수 위치에 캐릭터 말 얹기
+    if (currentStep === p || (pts < 50 && p === 50)) {
+      tile.classList.add('current');
+      tile.innerHTML = `
+        <div class="player-marker">
+          <img src="${avatarImg}" class="player-avatar" alt="플레이어">
+          <span class="player-tag">${avatarTag}</span>
+        </div>
+      ` + tile.innerHTML;
+    }
+
+    tile.innerHTML += `<div class="tile-point">${p}P</div>`;
+    container.appendChild(tile);
+  }
+}
+
 
 // 2. [가장 중요] 새로운 한 주 시작(체크 초기화) 시 호출되는 함수:
 // 보유 포인트는 그대로 두고, 다음 주에 다시 100점씩 받을 수 있도록 요일 지급 기록만 0으로 비움!
@@ -232,6 +292,7 @@ const POKEMON_MAP = {
 
 let currentMapChild = 'hochan';
 
+// 포인트 맵 레이어 팝업 열기
 function openPointMap(childKey) {
   currentMapChild = childKey;
   const childName = childKey === 'hochan' ? '윤호찬' : '윤호준';
@@ -241,78 +302,29 @@ function openPointMap(childKey) {
     titleEl.textContent = `⚡ [${childName}] 포켓몬 포인트 어드벤처 맵`;
   }
 
-  // 보드판 타일 생성
+  // 보드판 타일 렌더링
   renderDirectMapBoard();
 
-  // 👉 display를 flex로 설정하여 화면 정중앙 배치
+  // 👉 .show 클래스를 추가하여 브라우저 정중앙에 플로팅 오버레이로 띄움
   const modalEl = document.getElementById('pointMapModal');
   if (modalEl) {
-    modalEl.style.display = 'flex';
+    modalEl.classList.add('show');
   }
 }
 
+// 포인트 맵 레이어 팝업 닫기 (클래스 방식 + 인라인 스타일 방식 동시 처리)
 function closePointMapModal() {
   const modalEl = document.getElementById('pointMapModal');
   if (modalEl) {
+    // 1. show 클래스 제거
+    modalEl.classList.remove('show');
+    // 2. 인라인 display 속성도 확실하게 none으로 변경
     modalEl.style.display = 'none';
   }
 }
 
-function renderDirectMapBoard() {
-  const container = document.getElementById('modalBoardTrack');
-  const scoreEl = document.getElementById('mapCumulativeScore');
-  if (!container) return;
-  container.innerHTML = '';
-
-  const pts = rewardData[currentMapChild]?.cumulativePoint || 0;
-  if (scoreEl) scoreEl.textContent = pts.toLocaleString();
-
-  const currentStep = Math.floor(pts / 50) * 50;
-
-  const avatarImg = currentMapChild === 'hochan' 
-    ? 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png' 
-    : 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/133.png';
-  const avatarTag = currentMapChild === 'hochan' ? '호찬 피카츄' : '호준 이브이';
-
-  for (let p = 50; p <= 6800; p += 50) {
-    const tile = document.createElement('div');
-    tile.className = 'tile';
-
-    const poke = POKEMON_MAP[p];
-
-    if (poke) {
-      if (poke.coupon) {
-        tile.classList.add('bonus');
-        tile.innerHTML += `<span class="coupon-tag">🎟️${poke.coupon}</span>`;
-      } else {
-        tile.classList.add('milestone');
-      }
-      tile.innerHTML += `<img src="${poke.img}" class="tile-poke-img" alt="${poke.name}">`;
-    }
-
-    if (pts >= p) {
-      tile.classList.add('passed');
-    }
-
-    if (currentStep === p || (pts < 50 && p === 50)) {
-      tile.classList.add('current');
-      tile.innerHTML = `
-        <div class="player-marker">
-          <img src="${avatarImg}" class="player-avatar" alt="플레이어">
-          <span class="player-tag">${avatarTag}</span>
-        </div>
-      ` + tile.innerHTML;
-    }
-
-    tile.innerHTML += `<div class="tile-point">${p}P</div>`;
-    container.appendChild(tile);
-  }
-}
-
-// 전역 등록
-window.openPointMap = openPointMap;
+// 👉 닫기 함수를 window(전역)에 확실히 등록
 window.closePointMapModal = closePointMapModal;
-
 
 
 
