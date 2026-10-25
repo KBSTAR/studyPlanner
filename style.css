@@ -874,34 +874,39 @@ body {
 }
 
 /* ==========================================
-   포인트 맵 레이어 팝업 정밀 스타일
+   포인트 맵 레이어 팝업 정밀 중앙 배치
    ========================================== */
 .map-modal-overlay {
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
-  background: rgba(0, 0, 0, 0.8) !important;
+  background: rgba(0, 0, 0, 0.75) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  z-index: 99999 !important;
+  z-index: 999999 !important; /* 모든 요소 최상위 */
   padding: 20px !important;
   box-sizing: border-box !important;
 }
 
 .map-modal-window {
+  position: relative !important;
   background: linear-gradient(180deg, #1b5e20 0%, #0d3813 100%) !important;
-  width: 95% !important;
-  max-width: 1100px !important;
-  max-height: 88vh !important;
+  width: 95vw !important;
+  max-width: 1050px !important;
+  height: 85vh !important;
+  max-height: 850px !important;
   border-radius: 24px !important;
   display: flex !important;
   flex-direction: column !important;
   overflow: hidden !important;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7) !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8) !important;
   border: 4px solid #ffcb05 !important;
+  margin: auto !important;
 }
 
 .map-modal-header {
@@ -911,6 +916,7 @@ body {
   padding: 14px 24px !important;
   background: #2a75bb !important;
   border-bottom: 3px solid #ffcb05 !important;
+  flex-shrink: 0 !important;
 }
 
 .map-modal-header h2 {
@@ -918,7 +924,7 @@ body {
   font-size: 22px !important;
   color: #fff !important;
   margin: 0 !important;
-  text-shadow: 1px 1px 2px rgba(0,0,0,0.5) !important;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5) !important;
 }
 
 .map-target-status {
@@ -950,23 +956,25 @@ body {
 
 .map-modal-body {
   flex: 1 !important;
-  padding: 20px !important;
+  padding: 24px !important;
   overflow-y: auto !important;
+  background: radial-gradient(circle, #2e7d32 0%, #1b5e20 100%) !important;
 }
 
-/* 맵 타일 그리드 */
+/* 타일 그리드 레이아웃 */
 .track-grid {
   display: grid !important;
-  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)) !important;
-  gap: 10px !important;
+  grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)) !important;
+  gap: 12px !important;
+  padding-bottom: 20px !important;
 }
 
 .tile {
   background: #ffffff !important;
   color: #2e7d32 !important;
   border-radius: 14px !important;
-  padding: 6px 2px !important;
-  min-height: 85px !important;
+  padding: 8px 4px !important;
+  min-height: 90px !important;
   box-shadow: 0 4px 0 #81c784 !important;
   position: relative !important;
   display: flex !important;
@@ -986,7 +994,7 @@ body {
   background: #fff9c4 !important;
   border: 3px solid #ee1515 !important;
   box-shadow: 0 0 16px #ffeb3b, 0 5px 0 #f57f17 !important;
-  transform: scale(1.1) !important;
+  transform: scale(1.06) !important;
   z-index: 5 !important;
 }
 
@@ -1023,8 +1031,8 @@ body {
 }
 
 .player-avatar {
-  width: 46px !important;
-  height: 46px !important;
+  width: 48px !important;
+  height: 48px !important;
   object-fit: contain !important;
   filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5)) !important;
 }
@@ -1034,7 +1042,7 @@ body {
   color: #fff !important;
   font-size: 10px !important;
   font-family: 'Jua' !important;
-  padding: 1px 6px !important;
+  padding: 2px 6px !important;
   border-radius: 8px !important;
   border: 1px solid #fff !important;
   white-space: nowrap !important;
