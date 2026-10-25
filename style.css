@@ -373,7 +373,7 @@ body {
 }
 
 .mission-checkbox:checked::after {
-  content: '✔';
+  content: '\2713'; /* 유니코드 체크 표시 (인코딩 깨짐 걱정 없음) */
   font-size: 19px;
   color: #ffffff;
   font-weight: bold;
@@ -577,3 +577,484 @@ body {
 }
 
 .btn-close-english:hover { background-color: #fcd34d; }
+
+/* 포인트 및 쿠폰 상태 바 */
+.reward-status-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: #fdf8e2;
+  border: 2px dashed #f4b400;
+  border-radius: 14px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+}
+.point-badge, .coupon-badge {
+  font-size: 15px;
+  font-weight: 700;
+  color: #333;
+}
+.point-badge strong { color: #d9381e; font-size: 18px; }
+.coupon-badge strong { color: #1a73e8; font-size: 18px; }
+.reward-btns {
+  display: flex;
+  gap: 6px;
+}
+.btn-point-add {
+  background: #fff;
+  border: 1px solid #dcdcdc;
+  border-radius: 8px;
+  padding: 5px 9px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.btn-open-shop {
+  background: #ff7043;
+  color: white;
+  border: 2px solid var(--border-dark);
+  border-radius: 8px;
+  padding: 5px 12px;
+  font-family: 'Jua', sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 2px 2px 0px var(--border-dark);
+  transition: all 0.15s ease-in-out;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-open-shop:hover {
+  background: #f4511e;
+  transform: translateY(-2px);
+  box-shadow: 2px 4px 0px var(--border-dark);
+}
+
+/* 쿠폰 버튼 옆 포인트 맵 버튼 스타일 추가 */
+.btn-open-map {
+  background: #3b82f6;               /* 밝은 블루 컬러 */
+  color: #ffffff;
+  border: 2px solid var(--border-dark);
+  border-radius: 8px;
+  padding: 5px 12px;
+  font-family: 'Jua', sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 2px 2px 0px var(--border-dark);
+  transition: all 0.15s ease-in-out;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-open-map:hover {
+  background: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 2px 4px 0px var(--border-dark);
+}
+
+.btn-open-map:active {
+  transform: translateY(1px);
+  box-shadow: 1px 1px 0px var(--border-dark);
+}
+
+/* 쿠폰 모달 레이아웃 */
+.coupon-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.coupon-modal-window {
+  background: #fff;
+  width: 92%;
+  max-width: 680px;
+  max-height: 85vh;
+  border-radius: 20px;
+  padding: 22px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  display: flex;
+  flex-direction: column;
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #f1f3f4;
+  padding-bottom: 12px;
+}
+.btn-close-modal {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+}
+.coupon-nav-tabs {
+  display: flex;
+  gap: 10px;
+  margin: 14px 0;
+}
+.c-tab-btn {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  background: #f7f9fa;
+  font-weight: bold;
+  cursor: pointer;
+}
+.c-tab-btn.active {
+  background: #4285f4;
+  color: #fff;
+  border-color: #4285f4;
+}
+.coupon-view-panel {
+  overflow-y: auto;
+  padding-right: 6px;
+}
+.coupon-category-title {
+  font-size: 16px;
+  font-weight: 800;
+  margin: 16px 0 8px;
+  color: #333;
+}
+.coupon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+.coupon-card-item {
+  border: 2px solid #ffe082;
+  background: #fffdf5;
+  border-radius: 12px;
+  padding: 12px;
+  text-align: center;
+}
+.coupon-card-item.shopping {
+  border-color: #bbdefb;
+  background: #f6faff;
+}
+.coupon-card-item h4 { margin: 6px 0 10px; font-size: 14px; }
+.btn-exchange {
+  background: #ff9800;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  width: 100%;
+}
+.coupon-card-item.shopping .btn-exchange { background: #2196f3; }
+.my-coupon-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fdf8e2;
+  border: 1px solid #ffd54f;
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+.btn-use-coupon {
+  background: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* 요일 미션 헤더 정렬 (제목 좌측, 포인트 우측) */
+.mission-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+  margin-bottom: 8px;
+}
+
+/* 제목 옆 포인트 뱃지 */
+.header-point-badge {
+  background: #fff8e1;
+  border: 1.5px solid #ffb300;
+  border-radius: 20px;
+  padding: 4px 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #555;
+  box-shadow: 0 2px 5px rgba(255, 179, 0, 0.2);
+}
+
+.header-point-badge .point-icon {
+  font-size: 16px;
+}
+
+.header-point-badge strong {
+  color: #e65100;
+  font-size: 18px;
+  font-family: 'Fredoka', 'Jua', sans-serif;
+}
+
+.header-point-badge .unit {
+  font-size: 12px;
+  color: #e65100;
+  font-weight: 800;
+}
+
+/* 우측 정렬된 툴바 */
+.action-toolbar {
+  display: flex;
+  justify-content: flex-end; /* 오른쪽 정렬 */
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 8px;
+}
+
+/* 자물쇠 아이콘 전용 버튼 */
+.btn-lock-icon-toggle {
+  font-size: 16px;
+  padding: 6px 10px;
+  min-width: 40px;
+  justify-content: center;
+  background-color: #f1f5f9;
+  cursor: pointer;
+  border: 2px solid var(--border-dark);
+  border-radius: 12px;
+  box-shadow: 2px 2px 0px var(--border-dark);
+  transition: all 0.15s;
+}
+
+.btn-lock-icon-toggle.is-locked {
+  background-color: #fef08a; /* 잠겼을 때 은은한 노란빛 */
+}
+
+.btn-lock-icon-toggle:hover {
+  transform: translateY(-1px);
+}
+
+/* 일요일 미션과 보충 미션 사이 초기화 영역 */
+.sunday-reset-wrapper {
+  margin: 14px 0 6px 0;
+  text-align: center;
+}
+
+.btn-sunday-check-reset {
+  width: 100%;
+  font-family: 'Jua', sans-serif;
+  font-size: 14px;
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border: 2px solid var(--border-dark);
+  border-radius: 14px;
+  padding: 10px 16px;
+  cursor: pointer;
+  box-shadow: 2px 2px 0px var(--border-dark);
+  transition: all 0.15s ease-in-out;
+}
+
+.btn-sunday-check-reset:hover {
+  background-color: #fca5a5;
+  transform: translateY(-2px);
+  box-shadow: 2px 4px 0px var(--border-dark);
+}
+}
+
+/* ==========================================
+   포인트 맵 레이어 팝업 정밀 스타일
+   ========================================== */
+.map-modal-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(0, 0, 0, 0.8) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 99999 !important;
+  padding: 20px !important;
+  box-sizing: border-box !important;
+}
+
+.map-modal-window {
+  background: linear-gradient(180deg, #1b5e20 0%, #0d3813 100%) !important;
+  width: 95% !important;
+  max-width: 1100px !important;
+  max-height: 88vh !important;
+  border-radius: 24px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7) !important;
+  border: 4px solid #ffcb05 !important;
+}
+
+.map-modal-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 14px 24px !important;
+  background: #2a75bb !important;
+  border-bottom: 3px solid #ffcb05 !important;
+}
+
+.map-modal-header h2 {
+  font-family: 'Jua', sans-serif !important;
+  font-size: 22px !important;
+  color: #fff !important;
+  margin: 0 !important;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.5) !important;
+}
+
+.map-target-status {
+  font-size: 14px !important;
+  color: #ffe082 !important;
+  margin-top: 4px !important;
+  font-weight: 700 !important;
+}
+
+.map-target-status strong {
+  color: #ffeb3b !important;
+  font-size: 18px !important;
+  font-family: 'Fredoka', 'Jua', sans-serif !important;
+}
+
+.btn-close-map-modal {
+  background: none !important;
+  border: none !important;
+  color: #fff !important;
+  font-size: 28px !important;
+  font-weight: bold !important;
+  cursor: pointer !important;
+  line-height: 1 !important;
+}
+
+.btn-close-map-modal:hover {
+  color: #ffcb05 !important;
+}
+
+.map-modal-body {
+  flex: 1 !important;
+  padding: 20px !important;
+  overflow-y: auto !important;
+}
+
+/* 맵 타일 그리드 */
+.track-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.tile {
+  background: #ffffff !important;
+  color: #2e7d32 !important;
+  border-radius: 14px !important;
+  padding: 6px 2px !important;
+  min-height: 85px !important;
+  box-shadow: 0 4px 0 #81c784 !important;
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+  font-family: 'Fredoka', sans-serif !important;
+}
+
+.tile.passed {
+  background: #c8e6c9 !important;
+  color: #1b5e20 !important;
+  box-shadow: 0 4px 0 #66bb6a !important;
+}
+
+.tile.current {
+  background: #fff9c4 !important;
+  border: 3px solid #ee1515 !important;
+  box-shadow: 0 0 16px #ffeb3b, 0 5px 0 #f57f17 !important;
+  transform: scale(1.1) !important;
+  z-index: 5 !important;
+}
+
+.tile.milestone {
+  background: #fff3e0 !important;
+  border: 2px solid #ff9800 !important;
+}
+
+.tile.bonus {
+  background: #ffebee !important;
+  border: 2px solid #ee1515 !important;
+}
+
+.tile-point {
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  margin-top: 4px !important;
+}
+
+.tile-poke-img {
+  width: 44px !important;
+  height: 44px !important;
+  object-fit: contain !important;
+}
+
+.player-marker {
+  position: absolute !important;
+  top: -38px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  animation: mapHop 0.8s infinite alternate ease-in-out !important;
+  z-index: 10 !important;
+}
+
+.player-avatar {
+  width: 46px !important;
+  height: 46px !important;
+  object-fit: contain !important;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5)) !important;
+}
+
+.player-tag {
+  background: #ee1515 !important;
+  color: #fff !important;
+  font-size: 10px !important;
+  font-family: 'Jua' !important;
+  padding: 1px 6px !important;
+  border-radius: 8px !important;
+  border: 1px solid #fff !important;
+  white-space: nowrap !important;
+  margin-top: -4px !important;
+}
+
+.coupon-tag {
+  position: absolute !important;
+  top: -10px !important;
+  background: #ffcb05 !important;
+  color: #b71c1c !important;
+  border: 1.5px solid #d32f2f !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  padding: 1px 6px !important;
+  border-radius: 10px !important;
+  white-space: nowrap !important;
+}
+
+@keyframes mapHop {
+  from { transform: translateY(0); }
+  to { transform: translateY(-7px); }
+}
