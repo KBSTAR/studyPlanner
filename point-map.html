@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚡ 포켓몬 포인트 어드벤처 맵 (6,800P)</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Nanum+Square+Round:wght@700;800;900&family=Fredoka:wght@700&display=swap" rel="stylesheet">
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+<style>
+  :root {
+    --poke-yellow: #ffcb05;
+    --poke-blue: #2a75bb;
+    --poke-red: #ee1515;
+    --poke-dark: #1b263b;
+  }
+
+  * {
+    box-sizing: border-box;
+    font-family: 'Nanum Square Round', sans-serif;
+  }
+
+  body {
+    background: radial-gradient(circle at top, #1e3c72 0%, #2a5298 50%, #0f2027 100%);
+    color: #fff;
+    margin: 0;
+    padding: 20px 10px;
+    min-height: 100vh;
+    text-align: center;
+  }
+
+  /* 상단 헤더 */
+  .header-box {
+    background: rgba(255, 255, 255, 0.95);
+    border: 4px solid var(--poke-yellow);
+    border-radius: 25px;
+    max-width: 850px;
+    margin: 0 auto 20px;
+    padding: 16px 20px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+    color: #333;
+    position: relative;
+  }
+
+  .poke-header-title {
+    font-family: 'Jua', sans-serif;
+    font-size: 32px;
+    color: var(--poke-blue);
+    margin: 0 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .header-poke-img {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+  }
+
+  .trainer-selector {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    margin-bottom: 12px;
+  }
+
+  .btn-trainer {
+    font-family: 'Jua', sans-serif;
+    border: 3px solid #ddd;
+    background: #f8f9fa;
+    border-radius: 50px;
+    padding: 8px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-trainer img {
+    width: 28px;
+    height: 28px;
+  }
+
+  .btn-trainer.active {
+    background: var(--poke-red);
+    color: #fff;
+    border-color: var(--poke-yellow);
+    transform: scale(1.08);
+    box-shadow: 0 5px 15px rgba(238, 21, 21, 0.4);
+  }
+
+  .status-badge {
+    background: #fff8e1;
+    border: 2px dashed #ffa000;
+    border-radius: 14px;
+    padding: 6px 16px;
+    display: inline-block;
+    font-size: 15px;
+    font-weight: 800;
+    color: #444;
+  }
+
+  .status-badge strong {
+    color: #e65100;
+    font-size: 22px;
+    font-family: 'Fredoka', 'Jua', sans-serif;
+  }
+
+  /* 보드 어드벤처 맵 컨테이너 */
+  .adventure-map {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: linear-gradient(180deg, #388e3c 0%, #1b5e20 100%);
+    border: 6px solid #5d4037;
+    border-radius: 25px;
+    padding: 25px 15px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+    position: relative;
+  }
+
+  /* 트랙 그리드 */
+  .track-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(82px, 1fr));
+    gap: 10px;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* 보드 타일 */
+  .tile {
+    background: #ffffff;
+    color: #2e7d32;
+    border-radius: 14px;
+    padding: 6px 2px;
+    min-height: 85px;
+    box-shadow: 0 4px 0 #a5d6a7;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    transition: transform 0.2s;
+  }
+
+  .tile-point {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    margin-top: 4px;
+  }
+
+  /* 이미 지나온 칸 */
+  .tile.passed {
+    background: #c8e6c9;
+    color: #1b5e20;
+    box-shadow: 0 4px 0 #81c784;
+  }
+
+  /* 현재 플레이어 말 위치 */
+  .tile.current {
+    background: #fff9c4 !important;
+    border: 3px solid var(--poke-red);
+    box-shadow: 0 0 16px #ffeb3b, 0 6px 0 #f57f17 !important;
+    transform: scale(1.12);
+    z-index: 10;
+  }
+
+  .player-marker {
+    position: absolute;
+    top: -38px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: bounce 0.8s infinite alternate ease-in-out;
+    pointer-events: none;
+    z-index: 15;
+  }
+
+  .player-avatar {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+  }
+
+  .player-tag {
+    background: var(--poke-red);
+    color: #fff;
+    font-size: 10px;
+    font-family: 'Jua';
+    padding: 1px 6px;
+    border-radius: 8px;
+    border: 1px solid #fff;
+    white-space: nowrap;
+    margin-top: -4px;
+  }
+
+  /* 포켓몬 마일스톤 및 쿠폰 타일 */
+  .tile.milestone {
+    background: #fff3e0;
+    border: 2px solid #ff9800;
+  }
+
+  .tile.bonus {
+    background: #ffebee;
+    border: 2px solid var(--poke-red);
+  }
+
+  .tile-poke-img {
+    width: 44px;
+    height: 44px;
+    object-fit: contain;
+    transition: transform 0.2s;
+  }
+
+  .tile-poke-img:hover {
+    transform: scale(1.2);
+  }
+
+  .coupon-tag {
+    position: absolute;
+    top: -10px;
+    background: var(--poke-yellow);
+    color: #b71c1c;
+    border: 1.5px solid #d32f2f;
+    font-size: 10px;
+    font-weight: 900;
+    padding: 1px 6px;
+    border-radius: 10px;
+    white-space: nowrap;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+
+  @keyframes bounce {
+    from { transform: translateY(0); }
+    to { transform: translateY(-8px); }
+  }
+
+  @media (max-width: 600px) {
+    .track-grid { grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 6px; }
+    .tile { min-height: 72px; }
+    .tile-poke-img { width: 34px; height: 34px; }
+    .poke-header-title { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header-box">
+  <h1 class="poke-header-title">
+    <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" class="header-poke-img" alt="볼">
+    포켓몬 습관 정복 맵 (6,800P)
+    <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png" class="header-poke-img" alt="피카츄">
+  </h1>
+
+  <div class="trainer-selector">
+    <button class="btn-trainer active" id="btn-hochan" onclick="selectTrainer('hochan')">
+      <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png" alt="호찬 피카츄">
+      <span>지우 윤호찬</span>
+    </button>
+    <button class="btn-trainer" id="btn-hojun" onclick="selectTrainer('hojun')">
+      <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/133.png" alt="호준 이브이">
+      <span>고우 윤호준</span>
+    </button>
+  </div>
+
+  <div class="status-badge">
+    <span id="trainerTitle">윤호찬</span> 트레이너 누적 점수: <strong id="cumulativeScore">0</strong> P
+  </div>
+</div>
+
+<div class="adventure-map">
+  <div class="track-grid" id="boardTrack"></div>
+</div>
+
+<script>
+// 공식 포켓몬 스프라이트 이미지 매핑 (PokeAPI CDN)
+const POKEMON_MAP = {
+  250:  { name: '파이리',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/4.png' },
+  500:  { name: '꼬부기',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/7.png' },
+  750:  { name: '이상해씨', img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png' },
+  1000: { name: '피카츄',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png', coupon: '쿠폰 1장' },
+  1500: { name: '푸린',     img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/39.png' },
+  2000: { name: '뮤',       img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/151.png', coupon: '쿠폰 2장' },
+  2500: { name: '잠만보',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/143.png' },
+  3000: { name: '루기아',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/249.png', coupon: '쿠폰 3장' },
+  3500: { name: '팬텀',     img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/94.png' },
+  4000: { name: '칠색조',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/250.png', coupon: '쿠폰 1장' },
+  4500: { name: '괴력몬',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/68.png' },
+  5000: { name: '레쿠쟈',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/384.png', coupon: '쿠폰 1장' },
+  5500: { name: '망나뇽',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/149.png' },
+  6000: { name: '뮤츠',     img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/150.png', coupon: '쿠폰 3장' },
+  6800: { name: '아르세우스', img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/493.png', coupon: '최종 골인! 👑' }
+};
+
+let currentTrainer = new URLSearchParams(window.location.search).get('child') || 'hochan';
+let remoteData = {
+  hochan: { cumulativePoint: 0 },
+  hojun: { cumulativePoint: 0 }
+};
+
+function selectTrainer(child) {
+  currentTrainer = child;
+  document.getElementById('btn-hochan').classList.toggle('active', child === 'hochan');
+  document.getElementById('btn-hojun').classList.toggle('active', child === 'hojun');
+  document.getElementById('trainerTitle').textContent = child === 'hochan' ? '윤호찬' : '윤호준';
+  renderBoard();
+}
+
+function renderBoard() {
+  const container = document.getElementById('boardTrack');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const pts = remoteData[currentTrainer]?.cumulativePoint || 0;
+  document.getElementById('cumulativeScore').textContent = pts.toLocaleString();
+
+  const currentStep = Math.floor(pts / 50) * 50;
+
+  // 플레이어 캐릭터 이미지: 호찬(피카츄) / 호준(이브이)
+  const avatarImg = currentTrainer === 'hochan' 
+    ? 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png' 
+    : 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/133.png';
+  const avatarTag = currentTrainer === 'hochan' ? '호찬 피카츄' : '호준 이브이';
+
+  // 50P부터 6,800P까지 50단위 칸 생성 (총 136칸)
+  for (let p = 50; p <= 6800; p += 50) {
+    const tile = document.createElement('div');
+    tile.className = 'tile';
+
+    const poke = POKEMON_MAP[p];
+
+    // 포켓몬 출현 지점
+    if (poke) {
+      if (poke.coupon) {
+        tile.classList.add('bonus');
+        tile.innerHTML += `<span class="coupon-tag">🎟️${poke.coupon}</span>`;
+      } else {
+        tile.classList.add('milestone');
+      }
+      tile.innerHTML += `<img src="${poke.img}" class="tile-poke-img" alt="${poke.name}" title="${poke.name}">`;
+    }
+
+    // 지나온 길
+    if (pts >= p) {
+      tile.classList.add('passed');
+    }
+
+    // 현재 플레이어 말 위치
+    if (currentStep === p || (pts < 50 && p === 50)) {
+      tile.classList.add('current');
+      tile.innerHTML = `
+        <div class="player-marker">
+          <img src="${avatarImg}" class="player-avatar" alt="말">
+          <span class="player-tag">${avatarTag}</span>
+        </div>
+      ` + tile.innerHTML;
+    }
+
+    tile.innerHTML += `<div class="tile-point">${p}P</div>`;
+    container.appendChild(tile);
+  }
+}
+
+// Firebase Firestore 실시간 연동
+function initFirebase() {
+  if (window.firebase && firebase.apps.length > 0) {
+    const db = firebase.firestore();
+    db.collection('rewards').doc('brothers').onSnapshot((doc) => {
+      if (doc.exists) {
+        remoteData = doc.data();
+        renderBoard();
+      }
+    });
+  } else {
+    const saved = localStorage.getItem('family_reward_data');
+    if (saved) {
+      try { remoteData = JSON.parse(saved); } catch (e) {}
+      renderBoard();
+    }
+  }
+}
+
+window.addEventListener('load', () => {
+  selectTrainer(currentTrainer);
+  setTimeout(initFirebase, 300);
+});
+</script>
+</body>
+</html>
