@@ -180,11 +180,13 @@ function updateLockButtonUI(user) {
   if (!lockBtn) return;
   const isLocked = PROFILES[user].isLocked;
   if (isLocked) {
-    lockBtn.innerHTML = "🔒 미션 잠김";
+    lockBtn.innerHTML = "🔒";
     lockBtn.classList.add("is-locked");
+    lockBtn.title = "현재 미션 잠김 (클릭 시 비밀번호 입력 후 해제)";
   } else {
-    lockBtn.innerHTML = "🔓 편집 가능";
+    lockBtn.innerHTML = "🔓";
     lockBtn.classList.remove("is-locked");
+    lockBtn.title = "현재 편집 가능 (클릭 시 다시 잠금)";
   }
 }
 
@@ -209,6 +211,26 @@ function toggleMissionLock(user) {
     updateLockButtonUI(user);
     renderMissions(user);
     alert(`[${profile.name}] 미션이 안전하게 잠겼습니다! 🔒`);
+  }
+}
+
+// 체크박스 클릭 처리 (포인트 즉시 갱신 연동)
+function toggleMissionCheck(child, dayIdx, missionIdx) {
+  if (!window.missionData[child] || !window.missionData[child][dayIdx]) return;
+  
+  const mission = window.missionData[child][dayIdx][missionIdx];
+  mission.done = !mission.done;
+
+  // 1. 화면 체크리스트 다시 그리기
+  renderMissions(child);
+  
+  // 2. 로컬 저장 및 Firebase 전송
+  saveMissionsToLocal();
+  syncMissionsToFirebase(child);
+
+  // 3. 👉 [가장 중요] 포인트 계산 함수 즉시 강제 호출
+  if (typeof window.calculateAutoScore === 'function') {
+    window.calculateAutoScore(child);
   }
 }
 
@@ -291,6 +313,12 @@ function switchDay(user, index) {
   if (emojiEl) emojiEl.textContent = PROFILES[user].emojis[index];
 
   renderMissions(user);
+
+  // 👉 일요일(인덱스 6) 탭일 때만 미션 하단 체크 초기화 버튼 표시
+  const sundayResetArea = document.getElementById(`sundayCheckResetArea-${user}`);
+  if (sundayResetArea) {
+    sundayResetArea.style.display = (index === 6) ? 'block' : 'none';
+  }
 }
 
 function getIncompleteWeekdayMissions(user) {
@@ -364,7 +392,20 @@ function renderMissions(user) {
 
     listContainer.appendChild(itemDiv);
   }
-
+  
+  // 👉 [추가] 일요일(인덱스 6)일 경우, 기본 5가지 미션 바로 밑 & 보충 미션 바로 위에 초기화 버튼 삽입
+  if (activeIdx === 6) {
+    const sundayResetWrap = document.createElement('div');
+    sundayResetWrap.className = 'sunday-reset-wrapper';
+    sundayResetWrap.innerHTML = `
+      <button class="btn-sunday-check-reset" onclick="handleSecureReset('${user}')">
+        🔄 일주일 체크 초기화 (포인트 유지)
+      </button>
+    `;
+    listContainer.appendChild(sundayResetWrap);
+  }
+  
+  // 주말(토, 일) 보충 미션 렌더링 영역
   if (activeIdx === 5 || activeIdx === 6) {
     const incompleteMissions = getIncompleteWeekdayMissions(user);
 
@@ -445,11 +486,17 @@ function handleCheckChange(user, itemIndex, isChecked) {
   
   renderMissions(user);
 
+  // 👉 포인트 자동 계산 호출 추가
+  if (typeof window.calculateAutoScore === 'function') {
+    window.calculateAutoScore(user);
+  }
+
   const checkStatus = getCompletedCount(user);
   if (isChecked && checkStatus.total > 0 && checkStatus.count === checkStatus.total) {
     openRewardModal(user);
   }
 }
+
 
 function getCompletedCount(user) {
   const data = getStoredData(user);
@@ -480,6 +527,11 @@ function handleCarryoverCheckChange(user, originDay, itemIndex, isChecked) {
     data[originDay][itemIndex].checked = isChecked;
     saveStoredData(user, data, true);
     renderMissions(user);
+
+    // 👉 포인트 자동 계산 호출 추가
+    if (typeof window.calculateAutoScore === 'function') {
+      window.calculateAutoScore(user);
+    }
 
     const checkStatus = getCompletedCount(user);
     if (isChecked && checkStatus.total > 0 && checkStatus.count === checkStatus.total) {
@@ -585,6 +637,11 @@ function executeCheckReset(user) {
   }
   saveStoredData(user, data, true);
   renderMissions(user);
+
+  // 👉 체크 초기화 시에는 포인트를 깎지 않고, 주간 요일 달성 기록만 리셋하여 다음 주에 새 점수를 얻을 수 있게 합니다.
+  if (typeof window.resetWeeklyEarnedFlags === 'function') {
+    window.resetWeeklyEarnedFlags(user);
+  }
 }
 
 function resetAllWeeklyChecks(user) {
