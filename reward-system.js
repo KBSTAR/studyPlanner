@@ -174,14 +174,14 @@ function updateRewardDashboard(childKey) {
 }
 
 // ==========================================
-// 비밀번호(0209) 관리자 모드: 포인트 및 맵 위치 완벽 동기화
+// 비밀번호(1024) 관리자 모드: 포인트 및 맵 위치 완벽 동기화
 // ==========================================
 function openSecurePointManager(childKey) {
   const childName = childKey === 'hochan' ? '윤호찬' : '윤호준';
   const inputPw = prompt(`🔒 [${childName}의 포인트 관리자]\n비밀번호 4자리를 입력하세요:`);
   
   if (inputPw === null) return;
-  if (inputPw.trim() !== '0209') {
+  if (inputPw.trim() !== '1024') {
     alert('❌ 비밀번호가 올바르지 않습니다.');
     return;
   }
