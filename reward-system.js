@@ -8,17 +8,16 @@ const AVAILABLE_COUPONS = [
   { id: 'c3', type: 'action', titlePrefix: '🍜 가족끼리 외식하고 싶어요', hasInput: false },
   { id: 'c4', type: 'action', titlePrefix: '👨 아빠랑 ', titleSuffix: ' 하고 싶어요!', placeholder: '활동 내용 (예: 놀이공원)', hasInput: true },
   { id: 'c5', type: 'action', titlePrefix: '🤫 오늘은 잔소리하지 마세요', hasInput: false },
-  { id: 'c6', type: 'action', titlePrefix: '🍽️ 오늘 저녁 배달 메뉴는 내가 선택!', hasInput: false },
-  { id: 'c7', type: 'action', titlePrefix: '🎉 친구들과 파자마 파티 하고 싶어요', hasInput: false },
-  { id: 'c8', type: 'shopping', titlePrefix: '🛒 마트 자유 쇼핑권 (', titleSuffix: '원)', placeholder: '금액', hasInput: true },
-  { id: 'c9', type: 'shopping', titlePrefix: '🏪 편의점 쇼핑권 (', titleSuffix: '원)', placeholder: '금액', hasInput: true },
-  { id: 'c10', type: 'shopping', titlePrefix: '✏️ 문구점 쇼핑권 (', titleSuffix: '원)', placeholder: '금액', hasInput: true },
-  { id: 'c11', type: 'shopping', titlePrefix: '📚 내 맘대로 책 한 권 (만화책 가능)', hasInput: false },
-  { id: 'c12', type: 'shopping', titlePrefix: '🍦 내 맘대로 아이스크림 1개', hasInput: false },
-  { id: 'c13', type: 'shopping', titlePrefix: '🍗 내 맘대로 치킨 1마리', hasInput: false },
-  { id: 'c14', type: 'shopping', titlePrefix: '🍹 내 맘대로 음료 1잔', hasInput: false },
-  { id: 'c15', type: 'shopping', titlePrefix: '🍔 햄버거 세트', hasInput: false },
-  { id: 'c16', type: 'shopping', titlePrefix: '🍢 분식 세트', hasInput: false }
+  { id: 'c6', type: 'action', titlePrefix: '🍽️ 오늘 저녁 배달 메뉴는 내가 선택!', hasInput: false },  
+  { id: 'c7', type: 'action', titlePrefix: '🎮 게임시간 40분 추가할게요', hasInput: false },  
+  { id: 'c8', type: 'action', titlePrefix: '📺 평일에 TV 시청하게 해주세요', hasInput: false },  
+  { id: 'c9', type: 'shopping', titlePrefix: '🛒 마트 자유 쇼핑권 (', titleSuffix: '원)', placeholder: '금액', hasInput: true },
+  { id: 'c10', type: 'shopping', titlePrefix: '🏪 편의점 쇼핑권 (', titleSuffix: '원)', placeholder: '금액', hasInput: true },
+  { id: 'c11', type: 'shopping', titlePrefix: '✏️ 문구점 쇼핑권 (', titleSuffix: '원)', placeholder: '금액', hasInput: true },
+  { id: 'c12', type: 'shopping', titlePrefix: '📚 내 맘대로 책 한 권 (만화책 가능)', hasInput: false },
+  { id: 'c13', type: 'shopping', titlePrefix: '🍗 내 맘대로 배달메뉴', hasInput: false }  
+  
+
 ];
 
 // 영구 보존용 보상 데이터
@@ -182,7 +181,7 @@ function openSecurePointManager(childKey) {
   const inputPw = prompt(`🔒 [${childName}의 포인트 관리자]\n비밀번호 4자리를 입력하세요:`);
   
   if (inputPw === null) return;
-  if (inputPw.trim() !== '1024') {
+  if (inputPw.trim() !== '0209') {
     alert('❌ 비밀번호가 올바르지 않습니다.');
     return;
   }
