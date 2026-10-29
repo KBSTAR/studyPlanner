@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⚡ 포켓몬 포인트 어드벤처 맵 (6,800P)</title>
+<title>⚡ 포켓몬 포인트 어드벤처 맵 (13,500P)</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -35,7 +35,6 @@
     text-align: center;
   }
 
-  /* 상단 헤더 */
   .header-box {
     background: rgba(255, 255, 255, 0.95);
     border: 4px solid var(--poke-yellow);
@@ -50,7 +49,7 @@
 
   .poke-header-title {
     font-family: 'Jua', sans-serif;
-    font-size: 32px;
+    font-size: 30px;
     color: var(--poke-blue);
     margin: 0 0 12px;
     display: flex;
@@ -117,7 +116,6 @@
     font-family: 'Fredoka', 'Jua', sans-serif;
   }
 
-  /* 보드 어드벤처 맵 컨테이너 */
   .adventure-map {
     max-width: 1100px;
     margin: 0 auto;
@@ -129,7 +127,6 @@
     position: relative;
   }
 
-  /* 트랙 그리드 */
   .track-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(82px, 1fr));
@@ -138,7 +135,6 @@
     z-index: 2;
   }
 
-  /* 보드 타일 */
   .tile {
     background: #ffffff;
     color: #2e7d32;
@@ -161,14 +157,12 @@
     margin-top: 4px;
   }
 
-  /* 이미 지나온 칸 */
   .tile.passed {
     background: #c8e6c9;
     color: #1b5e20;
     box-shadow: 0 4px 0 #81c784;
   }
 
-  /* 현재 플레이어 말 위치 */
   .tile.current {
     background: #fff9c4 !important;
     border: 3px solid var(--poke-red);
@@ -207,7 +201,6 @@
     margin-top: -4px;
   }
 
-  /* 포켓몬 마일스톤 및 쿠폰 타일 */
   .tile.milestone {
     background: #fff3e0;
     border: 2px solid #ff9800;
@@ -261,7 +254,7 @@
 <div class="header-box">
   <h1 class="poke-header-title">
     <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" class="header-poke-img" alt="볼">
-    포켓몬 습관 정복 맵 (6,800P)
+    포켓몬 습관 정복 맵 (13,500P 대모험)
     <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png" class="header-poke-img" alt="피카츄">
   </h1>
 
@@ -286,23 +279,38 @@
 </div>
 
 <script>
-// 공식 포켓몬 스프라이트 이미지 매핑 (PokeAPI CDN)
 const POKEMON_MAP = {
-  250:  { name: '파이리',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/4.png' },
-  500:  { name: '꼬부기',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/7.png' },
-  750:  { name: '이상해씨', img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png' },
-  1000: { name: '피카츄',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png', coupon: '쿠폰 1장' },
-  1500: { name: '푸린',     img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/39.png' },
-  2000: { name: '뮤',       img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/151.png', coupon: '쿠폰 2장' },
-  2500: { name: '잠만보',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/143.png' },
-  3000: { name: '루기아',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/249.png', coupon: '쿠폰 3장' },
-  3500: { name: '팬텀',     img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/94.png' },
-  4000: { name: '칠색조',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/250.png', coupon: '쿠폰 1장' },
-  4500: { name: '괴력몬',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/68.png' },
-  5000: { name: '레쿠쟈',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/384.png', coupon: '쿠폰 1장' },
-  5500: { name: '망나뇽',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/149.png' },
-  6000: { name: '뮤츠',     img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/150.png', coupon: '쿠폰 3장' },
-  6800: { name: '아르세우스', img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/493.png', coupon: '최종 골인! 👑' }
+  250:   { name: '파이리',     img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/4.png' },
+  500:   { name: '꼬부기',     img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/7.png' },
+  750:   { name: '이상해씨',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png' },
+  1000:  { name: '피카츄',     img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png', coupon: '쿠폰 1장' },
+  1500:  { name: '푸린',       img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/39.png' },
+  2000:  { name: '뮤',         img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/151.png', coupon: '쿠폰 2장' },
+  2500:  { name: '잠만보',     img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/143.png' },
+  3000:  { name: '루기아',     img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/249.png', coupon: '쿠폰 3장' },
+  3500:  { name: '팬텀',       img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/94.png' },
+  4000:  { name: '칠색조',     img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/250.png', coupon: '쿠폰 1장' },
+  4500:  { name: '괴력몬',     img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/68.png' },
+  5000:  { name: '레쿠쟈',     img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/384.png', coupon: '쿠폰 1장' },
+  5500:  { name: '망나뇽',     img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/149.png' },
+  6000:  { name: '뮤츠',       img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/150.png', coupon: '쿠폰 3장' },
+  6800:  { name: '아르세우스', img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/493.png' },
+
+  // 교재 사진 코스 (6,850P ~ 13,500P)
+  7000:  { name: '디아루가',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/483.png', coupon: '쿠폰 1장' },
+  7500:  { name: '루카리오',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/448.png' },
+  8000:  { name: '펄기아',     img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/484.png', coupon: '쿠폰 1장' },
+  8500:  { name: '다크라이',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/491.png' },
+  9000:  { name: '기라티나',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/487.png', coupon: '쿠폰 3장' },
+  9500:  { name: '조로아크',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/571.png' },
+  10000: { name: '제크로무',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/644.png', coupon: '쿠폰 1장' },
+  10500: { name: '비크티니',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/494.png' },
+  11000: { name: '레시라무',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/643.png', coupon: '쿠폰 2장' },
+  11500: { name: '개굴닌자',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/658.png' },
+  12000: { name: '원시그란돈', img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/383.png', coupon: '쿠폰 5장' },
+  12500: { name: '지가르데',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/718.png' },
+  13000: { name: '원시가이오가', img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/382.png', coupon: '쿠폰 1장' },
+  13500: { name: '메가레쿠쟈', img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10079.png', coupon: '최종 마스터 완주! 🏆' }
 };
 
 let currentTrainer = new URLSearchParams(window.location.search).get('child') || 'hochan';
@@ -329,20 +337,17 @@ function renderBoard() {
 
   const currentStep = Math.floor(pts / 50) * 50;
 
-  // 플레이어 캐릭터 이미지: 호찬(피카츄) / 호준(이브이)
   const avatarImg = currentTrainer === 'hochan' 
     ? 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png' 
     : 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/133.png';
   const avatarTag = currentTrainer === 'hochan' ? '호찬 피카츄' : '호준 이브이';
 
-  // 50P부터 6,800P까지 50단위 칸 생성 (총 136칸)
-  for (let p = 50; p <= 6800; p += 50) {
+  for (let p = 50; p <= 13500; p += 50) {
     const tile = document.createElement('div');
     tile.className = 'tile';
 
     const poke = POKEMON_MAP[p];
 
-    // 포켓몬 출현 지점
     if (poke) {
       if (poke.coupon) {
         tile.classList.add('bonus');
@@ -353,12 +358,10 @@ function renderBoard() {
       tile.innerHTML += `<img src="${poke.img}" class="tile-poke-img" alt="${poke.name}" title="${poke.name}">`;
     }
 
-    // 지나온 길
     if (pts >= p) {
       tile.classList.add('passed');
     }
 
-    // 현재 플레이어 말 위치
     if (currentStep === p || (pts < 50 && p === 50)) {
       tile.classList.add('current');
       tile.innerHTML = `
@@ -374,7 +377,6 @@ function renderBoard() {
   }
 }
 
-// Firebase Firestore 실시간 연동
 function initFirebase() {
   if (window.firebase && firebase.apps.length > 0) {
     const db = firebase.firestore();
