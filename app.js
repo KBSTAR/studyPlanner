@@ -34,7 +34,7 @@ const DAY_SHORT = ["월", "화", "수", "목", "금", "토", "일"];
 const DAY_EMOJIS_HOCHAN = ["🚀", "💡", "🌈", "⚡", "🍭", "🏖️", "🎈"];
 const DAY_EMOJIS_HOJUN  = ["🍀", "🎯", "🎨", "⚽", "🍦", "⛺", "🔮"];
 const MISSION_COUNT = 5;
-const ADMIN_PASSWORD = "0209";
+const ADMIN_PASSWORD = "1024";
 
 function createInitialMissions() {
   return {
