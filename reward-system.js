@@ -308,17 +308,15 @@ function openPointMap(childKey) {
   // 👉 .show 클래스를 추가하여 브라우저 정중앙에 플로팅 오버레이로 띄움
   const modalEl = document.getElementById('pointMapModal');
   if (modalEl) {
-    modalEl.classList.add('show');
+    modalEl.style.display = 'flex';
   }
 }
 
-// 포인트 맵 레이어 팝업 닫기 (클래스 방식 + 인라인 스타일 방식 동시 처리)
+
+// 포인트 맵 레이어 팝업 닫기
 function closePointMapModal() {
   const modalEl = document.getElementById('pointMapModal');
   if (modalEl) {
-    // 1. show 클래스 제거
-    modalEl.classList.remove('show');
-    // 2. 인라인 display 속성도 확실하게 none으로 변경
     modalEl.style.display = 'none';
   }
 }
