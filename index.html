@@ -44,7 +44,7 @@
       <div class="coupon-badge">
         <span class="badge-icon">🎟️</span>
         <span class="badge-label">보유 쿠폰:</span>
-        <strong id="couponCount-hochan">0</strong> 장
+        <strong id="couponCount-hochan">0</strong>
       </div>
       <div class="reward-btns">
         <button class="btn-open-shop" onclick="openCouponModal('hochan')">🎁 쿠폰 사용/발급</button>
@@ -77,7 +77,7 @@
       </div>
       <div class="header-point-badge" onclick="openSecurePointManager('hochan')" title="클릭하여 포인트 직접 수정 (비밀번호 필요)" style="cursor: pointer;">
         <span class="point-icon">💰</span>
-        <span class="point-text">보유 포인트:</span>
+        <span class="point-text">누적 포인트:</span>
         <strong id="point-hochan">0</strong> <span class="unit">P</span>
       </div>
     </div>
@@ -120,7 +120,7 @@
       <div class="coupon-badge">
         <span class="badge-icon">🎟️</span>
         <span class="badge-label">보유 쿠폰:</span>
-        <strong id="couponCount-hojun">0</strong> 장
+        <strong id="couponCount-hojun">0</strong>
       </div>
       <div class="reward-btns">
         <button class="btn-open-shop" onclick="openCouponModal('hojun')">🎁 쿠폰 사용/발급</button>
@@ -153,7 +153,7 @@
       </div>
       <div class="header-point-badge" onclick="openSecurePointManager('hojun')" title="클릭하여 포인트 직접 수정 (비밀번호 필요)" style="cursor: pointer;">
         <span class="point-icon">💰</span>
-        <span class="point-text">보유 포인트:</span>
+        <span class="point-text">누적 포인트:</span>
         <strong id="point-hojun">0</strong> <span class="unit">P</span>
       </div>
     </div>
@@ -206,12 +206,12 @@
   </div>
 </div>
 
-<!-- ================= 포인트 맵 레이어 팝업 모달 (독립 배치) ================= -->
+<!-- ================= 포인트 맵 레이어 팝업 모달 ================= -->
 <div class="map-modal-overlay" id="pointMapModal" style="display: none;">
   <div class="map-modal-window">
     <div class="map-modal-header">
       <div class="map-header-left">
-        <h2 id="mapModalTitle">⚡ [윤호찬] 포켓몬 포인트 어드벤처 맵</h2>
+        <h2 id="mapModalTitle">⚡ [윤호찬] 포켓몬 포인트 어드벤처 맵 (13,500P)</h2>
         <div class="map-target-status">
           현재 총 누적 점수: <strong id="mapCumulativeScore">0</strong> P
         </div>
@@ -219,7 +219,7 @@
       <button class="btn-close-map-modal" onclick="closePointMapModal()">✕</button>
     </div>
 
-    <!-- 스크롤 가능한 50P ~ 6,800P 보드게임 트랙 영역 -->
+    <!-- 스크롤 가능한 50P ~ 13,500P 보드게임 트랙 영역 -->
     <div class="map-modal-body">
       <div class="track-grid" id="modalBoardTrack"></div>
     </div>
@@ -236,13 +236,13 @@
 
     <!-- 모달 내 탭 -->
     <div class="coupon-nav-tabs">
-      <button class="c-tab-btn active" id="tabBtn-store" onclick="switchCouponTab('store')">🛒 포인트로 쿠폰 교환 (1,000P)</button>
+      <button class="c-tab-btn active" id="tabBtn-store" onclick="switchCouponTab('store')">🛒 포인트맵 달성 쿠폰 발급하기</button>
       <button class="c-tab-btn" id="tabBtn-mycoupons" onclick="switchCouponTab('mycoupons')">🎟️ 내가 가진 쿠폰 사용하기</button>
     </div>
 
-    <!-- 탭 1: 쿠폰 상점 -->
+    <!-- 탭 1: 쿠폰 발급소 -->
     <div class="coupon-view-panel" id="panel-store">
-      <div class="panel-desc">1,000 포인트를 모으면 실제 쿠폰 1장을 발급받을 수 있어요!</div>
+      <div class="panel-desc">포인트맵의 목표를 달성할 때마다 쿠폰을 발급받을 수 있어요!</div>
       
       <div class="coupon-category-title">✨ 하고 싶어요 쿠폰</div>
       <div class="coupon-grid" id="actionCouponsList"></div>
