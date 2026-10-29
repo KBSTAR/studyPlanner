@@ -182,7 +182,7 @@ function openSecurePointManager(childKey) {
   const inputPw = prompt(`🔒 [${childName}의 포인트 관리자]\n비밀번호 4자리를 입력하세요:`);
   
   if (inputPw === null) return;
-  if (inputPw.trim() !== '0209') {
+  if (inputPw.trim() !== '1024') {
     alert('❌ 비밀번호가 올바르지 않습니다.');
     return;
   }
