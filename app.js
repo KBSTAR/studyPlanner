@@ -626,7 +626,14 @@ function handleSecureReset(user) {
   }
 }
 
+// [수정] 체크리스트 초기화 집행 함수 (포인트 보존 완벽 잠금)
 function executeCheckReset(user) {
+  // 1. 체크를 풀기 전에 이번 주 획득 플래그(dayGrantedScores)를 먼저 리셋하여 점수가 깎이는 계산을 방지합니다.
+  if (typeof window.resetWeeklyEarnedFlags === 'function') {
+    window.resetWeeklyEarnedFlags(user);
+  }
+
+  // 2. 미션 데이터의 모든 요일 체크 박스를 안전하게 false로 변경합니다.
   const data = getStoredData(user);
   for (let day = 0; day < 7; day++) {
     if (data[day]) {
@@ -635,12 +642,16 @@ function executeCheckReset(user) {
       });
     }
   }
+  
+  // 3. 미션 상태를 로컬 및 클라우드(habits)에 저장합니다.
   saveStoredData(user, data, true);
+  
+  // 4. 리포인팅 및 화면 다시 그리기
   renderMissions(user);
 
-  // 👉 체크 초기화 시에는 포인트를 깎지 않고, 주간 요일 달성 기록만 리셋하여 다음 주에 새 점수를 얻을 수 있게 합니다.
-  if (typeof window.resetWeeklyEarnedFlags === 'function') {
-    window.resetWeeklyEarnedFlags(user);
+  // 5. 이미 1번에서 플래그를 0으로 만들었기 때문에, 여기서 점수를 다시 계산해도 누적 점수가 유지됩니다.
+  if (typeof window.calculateAutoScore === 'function') {
+    window.calculateAutoScore(user);
   }
 }
 
