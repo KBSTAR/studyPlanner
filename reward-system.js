@@ -1,5 +1,5 @@
 // ==========================================
-// reward-system.js (게임/TV 쿠폰 최대 3개 발급 제한 적용 버전)
+// reward-system.js (오류 전면 수정 및 파이어베이스 완벽 동기화 버전)
 // ==========================================
 
 const AVAILABLE_COUPONS = [
@@ -9,8 +9,8 @@ const AVAILABLE_COUPONS = [
   { id: 'c4', type: 'action', titlePrefix: '👨 아빠랑 ', titleSuffix: ' 하고 싶어요!', placeholder: '활동 내용 (예: 놀이공원)', hasInput: true },
   { id: 'c5', type: 'action', titlePrefix: '🤫 오늘은 잔소리하지 마세요', hasInput: false },
   { id: 'c6', type: 'action', titlePrefix: '🍽️ 오늘 저녁 배달 메뉴는 내가 선택!', hasInput: false },  
-  { id: 'c7', type: 'action', titlePrefix: '🎮 게임시간 40분 추가할게요', hasInput: false, maxCount: 3 },  // 👉 최대 3개 제한
-  { id: 'c8', type: 'action', titlePrefix: '📺 평일에 TV 시청하게 해주세요', hasInput: false, maxCount: 3 },  // 👉 최대 3개 제한
+  { id: 'c7', type: 'action', titlePrefix: '🎮 게임시간 40분 추가할게요', hasInput: false, maxCount: 3 },  
+  { id: 'c8', type: 'action', titlePrefix: '📺 평일에 TV 시청하게 해주세요', hasInput: false, maxCount: 3 },  
   { id: 'c9', type: 'shopping', titlePrefix: '🛒 마트 자유 쇼핑권 (', titleSuffix: '원)', placeholder: '금액', hasInput: true },
   { id: 'c10', type: 'shopping', titlePrefix: '🏪 편의점 쇼핑권 (', titleSuffix: '원)', placeholder: '금액', hasInput: true },
   { id: 'c11', type: 'shopping', titlePrefix: '✏️ 문구점 쇼핑권 (', titleSuffix: '원)', placeholder: '금액', hasInput: true },
@@ -18,7 +18,6 @@ const AVAILABLE_COUPONS = [
   { id: 'c13', type: 'shopping', titlePrefix: '🍗 내 맘대로 배달메뉴', hasInput: false }  
 ];
 
-// 포인트맵 포켓몬 및 쿠폰 지급 수량 정의 (6800P 쿠폰 제외, 13500P까지)
 const POKEMON_MAP = {
   250:   { name: '파이리',     img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/4.png' },
   500:   { name: '꼬부기',     img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/7.png' },
@@ -35,15 +34,13 @@ const POKEMON_MAP = {
   5500:  { name: '망나뇽',     img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/149.png' },
   6000:  { name: '뮤츠',       img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/150.png', coupon: '쿠폰 3장', count: 3 },
   6800:  { name: '아르세우스', img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/493.png' },
-
-  // 교재 사진 코스 (6,850P ~ 13,500P)
   7000:  { name: '디아루가',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/483.png', coupon: '쿠폰 1장', count: 1 },
   7500:  { name: '루카리오',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/448.png' },
   8000:  { name: '펄기아',     img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/484.png', coupon: '쿠폰 1장', count: 1 },
   8500:  { name: '다크라이',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/491.png' },
   9000:  { name: '기라티나',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/487.png', coupon: '쿠폰 3장', count: 3 },
   9500:  { name: '조로아크',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/571.png' },
-  10000: { name: '제크로무',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/644.png', coupon: '쿠폰 1장', count: 1 },
+  10000: { name: '제크로무',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/shapes/pokemon/644.png', coupon: '쿠폰 1장', count: 1 },
   10500: { name: '비크티니',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/494.png' },
   11000: { name: '레시라무',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/643.png', coupon: '쿠폰 2장', count: 2 },
   11500: { name: '개굴닌자',   img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/658.png' },
@@ -61,7 +58,12 @@ let rewardData = {
 let currentModalChild = 'hochan';
 let currentMapChild = 'hochan';
 
-// 맵 누적 점수 기반 획득 가능 총 쿠폰 매수 계산
+function getFirestoreInstance() {
+  if (typeof db !== 'undefined' && db !== null) return db;
+  if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length) return firebase.firestore();
+  return null;
+}
+
 function getEarnedCouponTotal(childKey) {
   const pts = rewardData[childKey]?.cumulativePoint || 0;
   let earned = 0;
@@ -74,20 +76,18 @@ function getEarnedCouponTotal(childKey) {
   return earned;
 }
 
-// 잔여 발급 가능 쿠폰 매수
 function getAvailableCouponSlots(childKey) {
   const earned = getEarnedCouponTotal(childKey);
   const issued = rewardData[childKey]?.issuedCount || 0;
   return Math.max(0, earned - issued);
 }
 
-// 특정 쿠폰(ID)의 총 발급 횟수 조회 함수
 function getIssuedCountByCouponId(childKey, couponId) {
   const list = rewardData[childKey]?.coupons || [];
   return list.filter(c => c.couponId === couponId).length;
 }
 
-// 점수 자동 계산 함수 (체크 시 누적 포인트 반영)
+// 점수 자동 계산 함수
 function calculateAutoScore(childKey) {
   if (!rewardData[childKey]) {
     rewardData[childKey] = { cumulativePoint: 0, issuedCount: 0, coupons: [], dayGrantedScores: [0, 0, 0, 0, 0] };
@@ -109,6 +109,8 @@ function calculateAutoScore(childKey) {
   }
 
   if (!allMissions) return;
+
+  let hasChanged = false;
 
   for (let day = 0; day < 5; day++) {
     const dayList = allMissions[day] || [];
@@ -132,6 +134,7 @@ function calculateAutoScore(childKey) {
     if (diff !== 0) {
       rewardData[childKey].cumulativePoint = Math.max(0, (rewardData[childKey].cumulativePoint || 0) + diff);
       rewardData[childKey].dayGrantedScores[day] = expectedScore;
+      hasChanged = true;
     }
   }
 
@@ -142,14 +145,16 @@ function calculateAutoScore(childKey) {
     renderDirectMapBoard();
   }
 
-  saveRewardToFirebase();
+  if (hasChanged) {
+    saveRewardToFirebase();
+  }
 }
 
 function resetWeeklyEarnedFlags(childKey) {
   if (rewardData[childKey]) {
     rewardData[childKey].dayGrantedScores = [0, 0, 0, 0, 0];
-    saveRewardToFirebase();
     updateRewardDashboard(childKey);
+    saveRewardToFirebase();
   }
 }
 
@@ -168,6 +173,7 @@ function updateRewardDashboard(childKey) {
   }
 }
 
+// 관리자 직접 누적 포인트 수정 함수 (덮어쓰기)
 function openSecurePointManager(childKey) {
   const childName = childKey === 'hochan' ? '윤호찬' : '윤호준';
   const inputPw = prompt(`🔒 [${childName}의 포인트/쿠폰 관리자]\n비밀번호 4자리를 입력하세요:`);
@@ -205,7 +211,10 @@ function openSecurePointManager(childKey) {
     return;
   }
 
+  // 🌟 [핵심 수정] 관리자가 임의 수정한 경우, 자동 계산 베이스인 dayGrantedScores를 현재 계산 상태로 동결 또는 초기화하여 원복 루프를 차단합니다.
   rewardData[childKey].cumulativePoint = newPt;
+  rewardData[childKey].dayGrantedScores = []; // 임의 수정 시 자동 계산 스코어 정렬 초기화
+  
   updateRewardDashboard(childKey);
 
   const modalEl = document.getElementById('pointMapModal');
@@ -214,8 +223,9 @@ function openSecurePointManager(childKey) {
   }
 
   saveRewardToFirebase();
-  alert(`✅ [${childName}]의 누적 포인트가 [ ${newPt.toLocaleString()} P ] 로 설정되었습니다! 🚀`);
+  alert(`✅ [${childName}]의 누적 포인트가 [ ${newPt.toLocaleString()} P ] 로 서버와 기기에 성공적으로 수정 저장되었습니다! 🚀`);
 }
+
 
 function renderDirectMapBoard() {
   const container = document.getElementById('modalBoardTrack');
@@ -310,7 +320,6 @@ function switchCouponTab(tab) {
   if (tab === 'mycoupons') renderMyCoupons();
 }
 
-// 쿠폰 발급소 렌더링 (발급 가능 횟수 및 최대 제한 검사)
 function renderCouponStore() {
   const availableSlots = getAvailableCouponSlots(currentModalChild);
   const earnedTotal = getEarnedCouponTotal(currentModalChild);
@@ -327,7 +336,6 @@ function renderCouponStore() {
   }
 
   const createHtml = (c) => {
-    // 발급 제한 여부 확인
     const issuedOfThis = getIssuedCountByCouponId(currentModalChild, c.id);
     const isExceededLimit = c.maxCount && issuedOfThis >= c.maxCount;
     const canIssue = availableSlots > 0 && !isExceededLimit;
@@ -361,17 +369,15 @@ function renderCouponStore() {
   document.getElementById('shoppingCouponsList').innerHTML = AVAILABLE_COUPONS.filter(c => c.type === 'shopping').map(createHtml).join('');
 }
 
-// 쿠폰 발급 로직
 function exchangeCustomCoupon(couponId) {
   const availableSlots = getAvailableCouponSlots(currentModalChild);
   if (availableSlots <= 0) {
-    return alert('포인트맵에서 획득한 발급 가능 쿠폰이 없습니다!\n미션을 완료해 포인트맵의 포켓몬을 만나보세요! 🚀');
+    return alert('포인트맵에서 획득한 발급 가능 쿠폰이 없습니다! 미션을 완료해 포인트맵의 포켓몬을 만나보세요! 🚀');
   }
 
   const coupon = AVAILABLE_COUPONS.find(c => c.id === couponId);
   if (!coupon) return;
 
-  // 👉 발급 최대 수량 제한 확인
   if (coupon.maxCount) {
     const issuedOfThis = getIssuedCountByCouponId(currentModalChild, coupon.id);
     if (issuedOfThis >= coupon.maxCount) {
@@ -386,27 +392,27 @@ function exchangeCustomCoupon(couponId) {
     title = `${coupon.titlePrefix}${val}${coupon.titleSuffix || ''}`;
   }
 
-  if (confirm(`[${title}] 쿠폰을 발급받을까요?\n(남은 발급 가능: ${availableSlots - 1}장)`)) {
+  if (confirm(`[${title}] 쿠폰을 발급받을까요?
+(남은 발급 가능: ${availableSlots - 1}장)`)) {
     rewardData[currentModalChild].issuedCount = (rewardData[currentModalChild].issuedCount || 0) + 1;
     
     if (!rewardData[currentModalChild].coupons) rewardData[currentModalChild].coupons = [];
     rewardData[currentModalChild].coupons.push({
       id: Date.now(),
-      couponId: coupon.id, // 식별용 원본 쿠폰 ID 저장
+      couponId: coupon.id,
       title: title,
       type: coupon.type,
       used: false,
       issuedDate: new Date().toLocaleDateString('ko-KR')
     });
 
-    saveRewardToFirebase();
     updateRewardDashboard(currentModalChild);
+    saveRewardToFirebase();
     alert('쿠폰이 성공적으로 발급되었습니다! 🎟️');
     switchCouponTab('mycoupons');
   }
 }
 
-// 보유 쿠폰함 렌더링
 function renderMyCoupons() {
   const container = document.getElementById('myCouponListContainer');
   if (!container) return;
@@ -437,47 +443,62 @@ function useMyCoupon(couponId) {
       target.used = true;
       target.usedDate = new Date().toLocaleDateString('ko-KR');
     }
-    saveRewardToFirebase();
     updateRewardDashboard(currentModalChild);
     renderMyCoupons();
+    saveRewardToFirebase();
   }
 }
 
+// 파이어베이스 실시간 구독 로직 (덮어쓰기)
 function initFirebaseRewardSync() {
-  const firestore = (typeof db !== 'undefined') ? db : (window.firebase?.apps?.length ? firebase.firestore() : null);
+  const firestore = getFirestoreInstance();
+
+  const saved = localStorage.getItem('family_reward_data');
+  if (saved) {
+    try { rewardData = JSON.parse(saved); } catch (e) {}
+  }
+  updateRewardDashboard('hochan');
+  updateRewardDashboard('hojun');
 
   if (!firestore) {
-    const saved = localStorage.getItem('family_reward_data');
-    if (saved) {
-      try { rewardData = JSON.parse(saved); } catch (e) {}
-    }
-    updateRewardDashboard('hochan');
-    updateRewardDashboard('hojun');
+    console.warn("Firestore 인스턴스를 찾을 수 없어 로컬 모드로 동작합니다.");
     return;
   }
 
   firestore.collection('rewards').doc('brothers').onSnapshot((doc) => {
     if (doc.exists) {
       const remote = doc.data();
-      if (remote.hochan) rewardData.hochan = remote.hochan;
-      if (remote.hojun) rewardData.hojun = remote.hojun;
-      updateRewardDashboard('hochan');
-      updateRewardDashboard('hojun');
+      
+      // 🌟 [핵심 수정] 서버에서 받아온 최신 포인트가 기기 내부 데이터와 다를 때만 덮어씌워 무한 계산 루프를 방지합니다.
+      if (JSON.stringify(rewardData) !== JSON.stringify(remote)) {
+        if (remote.hochan) rewardData.hochan = remote.hochan;
+        if (remote.hojun) rewardData.hojun = remote.hojun;
+        
+        updateRewardDashboard('hochan');
+        updateRewardDashboard('hojun');
+        
+        localStorage.setItem('family_reward_data', JSON.stringify(rewardData));
+      }
     }
+  }, (err) => {
+    console.error("보상 시스템 실시간 동기화 에러: ", err);
   });
 }
 
 async function saveRewardToFirebase() {
   localStorage.setItem('family_reward_data', JSON.stringify(rewardData));
-  const firestore = (typeof db !== 'undefined') ? db : (window.firebase?.apps?.length ? firebase.firestore() : null);
+  
+  const firestore = getFirestoreInstance();
   if (firestore) {
     try {
       await firestore.collection('rewards').doc('brothers').set(rewardData, { merge: true });
-    } catch (e) {}
+      console.log("☁️ 누적 포인트 및 쿠폰 데이터가 파이어베이스와 성공적으로 연동되었습니다.");
+    } catch (e) {
+      console.error("❌ 파이어베이스 포인트 데이터 업로드 실패:", e);
+    }
   }
 }
 
-// 전역 등록
 window.calculateAutoScore = calculateAutoScore;
 window.resetWeeklyEarnedFlags = resetWeeklyEarnedFlags;
 window.openCouponModal = openCouponModal;
