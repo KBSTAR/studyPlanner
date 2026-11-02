@@ -87,13 +87,13 @@ function getIssuedCountByCouponId(childKey, couponId) {
   return list.filter(c => c.couponId === couponId).length;
 }
 
-// [수정] 점수 자동 계산 함수 (기존 점수 보존 및 안전 계산)
+// 점수 자동 계산 함수 (체크 시 누적 포인트 반영)
 function calculateAutoScore(childKey) {
   if (!rewardData[childKey]) {
     rewardData[childKey] = { cumulativePoint: 0, issuedCount: 0, coupons: [], dayGrantedScores: [0, 0, 0, 0, 0] };
   }
   if (!rewardData[childKey].dayGrantedScores) {
-    rewardData[childKey].dayGrantedScores =;
+    rewardData[childKey].dayGrantedScores = [0, 0, 0, 0, 0];
   }
 
   let allMissions = null;
@@ -109,9 +109,6 @@ function calculateAutoScore(childKey) {
   }
 
   if (!allMissions) return;
-
-  // 임시 변수에 기존 상태 보관
-  let currentTotalPoint = rewardData[childKey].cumulativePoint || 0;
 
   for (let day = 0; day < 5; day++) {
     const dayList = allMissions[day] || [];
@@ -133,14 +130,10 @@ function calculateAutoScore(childKey) {
     const diff = expectedScore - alreadyGranted;
 
     if (diff !== 0) {
-      // 포인트가 깎여서 총점이 마이너스가 되지 않도록 방어선 구축
-      currentTotalPoint = Math.max(0, currentTotalPoint + diff);
+      rewardData[childKey].cumulativePoint = Math.max(0, (rewardData[childKey].cumulativePoint || 0) + diff);
       rewardData[childKey].dayGrantedScores[day] = expectedScore;
     }
   }
-
-  // 최종 계산된 포인트를 확실하게 대입
-  rewardData[childKey].cumulativePoint = currentTotalPoint;
 
   updateRewardDashboard(childKey);
 
@@ -152,14 +145,9 @@ function calculateAutoScore(childKey) {
   saveRewardToFirebase();
 }
 
-// [수정] 주간 플래그 리셋 시 누적 포인트를 절대 안전하게 고정하는 함수
 function resetWeeklyEarnedFlags(childKey) {
   if (rewardData[childKey]) {
-    // 요일별 이미 정산받았던 기록(100P, 50P 등)만 0으로 지워줍니다.
-    // 이렇게 하면 다음 주에 미션을 체크할 때 새로운 점수(diff)가 누적으로 더해집니다!
-    rewardData[childKey].dayGrantedScores =;
-    
-    // 점수 보존을 위해 DB 및 화면에 강제 갱신
+    rewardData[childKey].dayGrantedScores = [0, 0, 0, 0, 0];
     saveRewardToFirebase();
     updateRewardDashboard(childKey);
   }
